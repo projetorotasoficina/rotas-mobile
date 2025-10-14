@@ -1,5 +1,6 @@
 package br.edu.utfpr.geocoleta.Activities
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.Toast
@@ -34,7 +35,8 @@ class SelectRouteActivity : AppCompatActivity() {
 
         val btnConfirmar = findViewById<Button>(R.id.btnConfirmar)
         btnConfirmar.setOnClickListener {
-            // Aqui você pode pegar a rota selecionada e enviar para outra tela
+            val intent = Intent(this, InitActivity::class.java)
+            startActivity(intent)
         }
     }
 }
