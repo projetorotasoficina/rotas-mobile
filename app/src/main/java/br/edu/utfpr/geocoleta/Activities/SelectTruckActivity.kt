@@ -9,7 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import br.edu.utfpr.geocoleta.Adapters.TruckAdapter
-import br.edu.utfpr.geocoleta.Models.Truck
+import br.edu.utfpr.geocoleta.Data.Models.Truck
 import br.edu.utfpr.geocoleta.R
 
 class SelectTruckActivity : AppCompatActivity() {
@@ -29,43 +29,43 @@ class SelectTruckActivity : AppCompatActivity() {
 
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // Lista mockada (vira da API depois)
-        listaTrucks = listOf(
-            Truck("ACB000", "Caminhão Volvo, azul"),
-            Truck("XYZ123", "Caminhão Mercedes, branco"),
-            Truck("JHK456", "Caminhão Scania, vermelho"),
-            Truck("KLM789", "Caminhão Iveco, preto")
-        )
-
-        adapter = TruckAdapter(listaTrucks) { selecionado ->
-            truckSelecionado = selecionado
-        }
-
-        recyclerView.adapter = adapter
-
-        // Buscar por placa
-        btnBuscar.setOnClickListener {
-            val query = etBuscar.text.toString().trim().uppercase()
-            val filtrados = if (query.isEmpty()) {
-                listaTrucks
-            } else {
-                listaTrucks.filter { it.placa.contains(query, ignoreCase = true) }
-            }
-            adapter.updateList(filtrados)
-        }
-
-        // Confirmar
-        btnConfirmar.setOnClickListener {
-            truckSelecionado?.let {
-                Toast.makeText(this, "Confirmado: ${it.placa}", Toast.LENGTH_SHORT).show()
-                // Exemplo: enviar para próxima Activity
-                val intent = Intent(this, SelectRouteActivity::class.java)
-                intent.putExtra("placa", it.placa)
-                intent.putExtra("descricao", it.descricao)
-                startActivity(intent)
-            } ?: run {
-                Toast.makeText(this, "Selecione um caminhão!", Toast.LENGTH_SHORT).show()
-            }
-        }
+//        // Lista mockada (vira da API depois)
+//        listaTrucks = listOf(
+//            Truck("ACB000", "Caminhão Volvo, azul"),
+//            Truck("XYZ123", "Caminhão Mercedes, branco"),
+//            Truck("JHK456", "Caminhão Scania, vermelho"),
+//            Truck("KLM789", "Caminhão Iveco, preto")
+//        )
+//
+//        adapter = TruckAdapter(listaTrucks) { selecionado ->
+//            truckSelecionado = selecionado
+//        }
+//
+//        recyclerView.adapter = adapter
+//
+//        // Buscar por placa
+//        btnBuscar.setOnClickListener {
+//            val query = etBuscar.text.toString().trim().uppercase()
+//            val filtrados = if (query.isEmpty()) {
+//                listaTrucks
+//            } else {
+//                listaTrucks.filter { it.placa.contains(query, ignoreCase = true) }
+//            }
+//            adapter.updateList(filtrados)
+//        }
+//
+//        // Confirmar
+//        btnConfirmar.setOnClickListener {
+//            truckSelecionado?.let {
+//                Toast.makeText(this, "Confirmado: ${it.placa}", Toast.LENGTH_SHORT).show()
+//                // Exemplo: enviar para próxima Activity
+//                val intent = Intent(this, SelectRouteActivity::class.java)
+//                intent.putExtra("placa", it.placa)
+//                intent.putExtra("descricao", it.descricao)
+//                startActivity(intent)
+//            } ?: run {
+//                Toast.makeText(this, "Selecione um caminhão!", Toast.LENGTH_SHORT).show()
+//            }
+//        }
     }
 }

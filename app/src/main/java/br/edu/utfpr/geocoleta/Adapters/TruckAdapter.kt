@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import br.edu.utfpr.geocoleta.Models.Truck
+import br.edu.utfpr.geocoleta.Data.Models.Truck
 import br.edu.utfpr.geocoleta.R
 
 class TruckAdapter(
@@ -31,7 +31,7 @@ class TruckAdapter(
     override fun onBindViewHolder(holder: TruckViewHolder, position: Int) {
         val truck = listaTrucks[position]
         holder.tvPlaca.text = "PLACA ${truck.placa}"
-        holder.tvDescricao.text = truck.descricao
+//        holder.tvDescricao.text = truck.descricao
 
         // Fundo normal ou selecionado
         if (position == selectedPosition) {
