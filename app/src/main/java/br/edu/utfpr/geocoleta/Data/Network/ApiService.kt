@@ -10,16 +10,15 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 
 interface ApiService {
-    @GET("/motoristas")
+    @GET("motoristas")
     suspend fun getDrivers(): List<Trucker>
 
-    @GET("/caminhoes")
+    @GET("caminhoes")
     suspend fun getTrucks(): List<Truck>
 
-    @GET("/rota")
+    @GET("rota")
     suspend fun getRoutes(): List<Route>
 
-    @POST("/trajetos")
+    @POST("trajetos")
     suspend fun sendCoordinate(@Body coordinate: Coordinates): Response<Unit>
-
 }

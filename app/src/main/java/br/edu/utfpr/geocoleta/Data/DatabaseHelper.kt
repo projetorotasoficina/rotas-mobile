@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper
 
 object DatabaseContract {
     const val DATABASE_NAME = "geocoleta.db"
-    const val DATABASE_VERSION = 1
+    const val DATABASE_VERSION = 2
 
     object Caminhao {
         const val TABLE_NAME = "caminhao"
@@ -22,7 +22,7 @@ object DatabaseContract {
         const val TABLE_NAME = "motorista"
         const val COLUMN_ID = "id"
         const val COLUMN_NOME = "nome"
-        const val COLUMN_CNH = "cnh"
+        const val COLUMN_CNH_CATEGORIA = "cnh_categoria"
         const val COLUMN_CNH_VALIDADE = "cnh_validade"
         const val COLUMN_CPF = "cpf"
         const val COLUMN_ATIVO = "ativo"
@@ -118,7 +118,7 @@ class DatabaseHelper(context: Context) :
         CREATE TABLE ${DatabaseContract.Motorista.TABLE_NAME} (
             ${DatabaseContract.Motorista.COLUMN_ID} INTEGER PRIMARY KEY AUTOINCREMENT,
             ${DatabaseContract.Motorista.COLUMN_NOME} TEXT NOT NULL,
-            ${DatabaseContract.Motorista.COLUMN_CNH} TEXT NOT NULL
+            ${DatabaseContract.Motorista.COLUMN_CNH_CATEGORIA} TEXT NOT NULL,
             ${DatabaseContract.Motorista.COLUMN_CNH_VALIDADE} TEXT,
             ${DatabaseContract.Motorista.COLUMN_CPF} TEXT,
             ${DatabaseContract.Motorista.COLUMN_ATIVO} INTEGER

@@ -15,7 +15,10 @@ class TruckerRepository (context: Context) {
         val db = dbHelper.writableDatabase
         val values = ContentValues().apply {
             put(DatabaseContract.Motorista.COLUMN_NOME, motorista.nome)
-            put(DatabaseContract.Motorista.COLUMN_CNH, motorista.cnh)
+            put(DatabaseContract.Motorista.COLUMN_CPF, motorista.cpf)
+            put(DatabaseContract.Motorista.COLUMN_CNH_CATEGORIA, motorista.cnhCategoria)
+            put(DatabaseContract.Motorista.COLUMN_CNH_VALIDADE, motorista.cnhValidade)
+            put(DatabaseContract.Motorista.COLUMN_ATIVO, if (motorista.ativo) 1 else 0)
         }
         return db.insert(DatabaseContract.Motorista.TABLE_NAME, null, values)
     }
@@ -24,7 +27,10 @@ class TruckerRepository (context: Context) {
         val db = dbHelper.writableDatabase
         val values = ContentValues().apply {
             put(DatabaseContract.Motorista.COLUMN_NOME, motorista.nome)
-            put(DatabaseContract.Motorista.COLUMN_CNH, motorista.cnh)
+            put(DatabaseContract.Motorista.COLUMN_CPF, motorista.cpf)
+            put(DatabaseContract.Motorista.COLUMN_CNH_CATEGORIA, motorista.cnhCategoria)
+            put(DatabaseContract.Motorista.COLUMN_CNH_VALIDADE, motorista.cnhValidade)
+            put(DatabaseContract.Motorista.COLUMN_ATIVO, if (motorista.ativo) 1 else 0)
         }
         return db.update(
             DatabaseContract.Motorista.TABLE_NAME,
@@ -43,30 +49,30 @@ class TruckerRepository (context: Context) {
         )
     }
 
-    fun listAll(): List<Truck> {
+    fun listAll(): List<Trucker> {
         val db = dbHelper.readableDatabase
         val cursor = db.query(
-            DatabaseContract.Caminhao.TABLE_NAME,
+            DatabaseContract.Motorista.TABLE_NAME,
             null, null, null, null, null, null
         )
 
-        val lista = mutableListOf<Truck>()
+        val lista = mutableListOf<Trucker>()
         with(cursor) {
             while (moveToNext()) {
-                val id = getInt(getColumnIndexOrThrow(DatabaseContract.Caminhao.COLUMN_ID))
-                val placa = getString(getColumnIndexOrThrow(DatabaseContract.Caminhao.COLUMN_PLACA))
-                val modelo = getString(getColumnIndexOrThrow(DatabaseContract.Caminhao.COLUMN_MODELO))
-                val tipoColeta = getInt(getColumnIndexOrThrow(DatabaseContract.Caminhao.COLUMN_TIPO_COLETA))
-                val tipoResiduo = getInt(getColumnIndexOrThrow(DatabaseContract.Caminhao.COLUMN_TIPO_RESIDUO))
-                val ativo = getInt(getColumnIndexOrThrow(DatabaseContract.Caminhao.COLUMN_STATUS)) == 1
+                val id = getInt(getColumnIndexOrThrow(DatabaseContract.Motorista.COLUMN_ID))
+                val nome = getString(getColumnIndexOrThrow(DatabaseContract.Motorista.COLUMN_NOME))
+                val cpf = getString(getColumnIndexOrThrow(DatabaseContract.Motorista.COLUMN_CPF))
+                val cnhCategoria = getString(getColumnIndexOrThrow(DatabaseContract.Motorista.COLUMN_CNH_CATEGORIA))
+                val cnhValidade = getString(getColumnIndexOrThrow(DatabaseContract.Motorista.COLUMN_CNH_VALIDADE))
+                val ativo = getInt(getColumnIndexOrThrow(DatabaseContract.Motorista.COLUMN_ATIVO)) == 1
 
                 lista.add(
-                    Truck(
+                    Trucker(
                         id = id,
-                        placa = placa,
-                        modelo = modelo,
-                        tipoColeta = tipoColeta,
-                        tipoResiduo = tipoResiduo,
+                        nome = nome,
+                        cpf = cpf,
+                        cnhCategoria = cnhCategoria,
+                        cnhValidade = cnhValidade,
                         ativo = ativo
                     )
                 )
