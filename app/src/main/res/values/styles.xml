@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Estilos de texto -->
+    <style name="TextAppearance.Headline" parent="TextAppearance.AppCompat.Headline">
+        <item name="android:textSize">@dimen/text_xxxl</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/foreground</item>
+    </style>
+    
+    <style name="TextAppearance.Title" parent="TextAppearance.AppCompat.Title">
+        <item name="android:textSize">@dimen/text_xxl</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/foreground</item>
+    </style>
+    
+    <style name="TextAppearance.Subtitle" parent="TextAppearance.AppCompat.Subhead">
+        <item name="android:textSize">@dimen/text_lg</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/foreground</item>
+    </style>
+    
+    <style name="TextAppearance.Body" parent="TextAppearance.AppCompat.Body1">
+        <item name="android:textSize">@dimen/text_md</item>
+        <item name="android:textColor">@color/foreground</item>
+    </style>
+    
+    <style name="TextAppearance.Caption" parent="TextAppearance.AppCompat.Caption">
+        <item name="android:textSize">@dimen/text_sm</item>
+        <item name="android:textColor">@color/muted_foreground</item>
+    </style>
+    
+    <style name="TextAppearance.Label" parent="TextAppearance.AppCompat.Caption">
+        <item name="android:textSize">@dimen/text_sm</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/foreground</item>
+    </style>
+    
+    <!-- Estilos de botões -->
+    <style name="Button.Primary" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:layout_height">@dimen/button_height</item>
+
+        <item name="backgroundTint">@color/primary</item>
+
+        <item name="cornerRadius">10dp</item>
+
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">@dimen/text_md</item>
+
+        <item name="android:elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+    
+    <style name="Button.Secondary" parent="Widget.AppCompat.Button">
+        <item name="android:layout_height">@dimen/button_height</item>
+        <item name="android:textColor">@color/primary</item>
+        <item name="android:textSize">@dimen/text_md</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:paddingStart">@dimen/padding_lg</item>
+        <item name="android:paddingEnd">@dimen/padding_lg</item>
+        <item name="android:paddingTop">@dimen/padding_md</item>
+        <item name="android:paddingBottom">@dimen/padding_md</item>
+        <item name="android:elevation">@dimen/elevation_sm</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+    
+    <style name="Button.Small" parent="Button.Primary">
+        <item name="android:layout_height">@dimen/button_height_sm</item>
+        <item name="android:textSize">@dimen/text_sm</item>
+        <item name="android:paddingStart">@dimen/padding_md</item>
+        <item name="android:paddingEnd">@dimen/padding_md</item>
+    </style>
+    
+    <style name="Button.Large" parent="Button.Primary">
+        <item name="android:layout_height">@dimen/button_height_lg</item>
+        <item name="android:textSize">@dimen/text_lg</item>
+    </style>
+    
+    <style name="Button.Text" parent="Widget.AppCompat.Button">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:textColor">@color/primary</item>
+        <item name="android:textSize">@dimen/text_md</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:paddingStart">@dimen/padding_sm</item>
+        <item name="android:paddingEnd">@dimen/padding_sm</item>
+        <item name="android:paddingTop">@dimen/padding_sm</item>
+        <item name="android:paddingBottom">@dimen/padding_sm</item>
+        <item name="android:elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+    
+    <!-- Estilos de inputs -->
+    <style name="Input.Default" parent="Widget.AppCompat.EditText">
+        <item name="android:layout_height">@dimen/input_height</item>
+        <item name="android:textSize">@dimen/text_md</item>
+        <item name="android:textColor">@color/foreground</item>
+        <item name="android:textColorHint">@color/muted_foreground</item>
+        <item name="android:background">@drawable/input_background</item>
+        <item name="android:padding">@dimen/padding_md</item>
+        <item name="android:elevation">@dimen/elevation_sm</item>
+    </style>
+    
+</resources>
