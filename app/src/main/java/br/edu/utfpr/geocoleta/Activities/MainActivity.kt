@@ -2,15 +2,25 @@ package br.edu.utfpr.geocoleta.Activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Button
 import android.view.View // Importe para usar View.VISIBLE e View.GONE
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.TextView // Importe para referenciar o TextView de erro
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import br.edu.utfpr.geocoleta.Data.Repository.RouteRepository
+import br.edu.utfpr.geocoleta.Data.Repository.TruckRepository
+import br.edu.utfpr.geocoleta.Data.Repository.TruckerRepository
 import br.edu.utfpr.geocoleta.R
+import kotlinx.coroutines.launch
 import com.google.android.material.button.MaterialButton // Use MaterialButton se estiver usando no XML
 
 class MainActivity : AppCompatActivity() {
-
+    private lateinit var  repositoryTrucker : TruckerRepository
+    private lateinit var  repositoryTruck : TruckRepository
+    private lateinit var  repositoryRoute : RouteRepository
+    private lateinit var loadingLayout: FrameLayout
     // 1. Declare as Views fora do onCreate para usá-las em funções diferentes
     private lateinit var etCpf: EditText
     private lateinit var tvErroCpf: TextView
@@ -20,6 +30,24 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        loadingLayout = findViewById(R.id.loadingLayout)
+        repositoryTrucker = TruckerRepository(this)
+        repositoryTruck = TruckRepository(this)
+        repositoryRoute = RouteRepository(this)
+        lifecycleScope.launch {
+            showLoading(true)
+            try {
+                repositoryTrucker.getTruckers()
+                repositoryTruck.getTrucks()
+                repositoryRoute.getRoutes()
+            }catch (e : Exception){
+                e.printStackTrace()
+            }finally {
+                showLoading(false)
+            }
+
+        }
+
         // 2. Vincule as Views (Busque o ID do TextView de erro que adicionamos)
         etCpf = findViewById(R.id.etCpf)
         // Certifique-se que o ID 'tvErroCpf' está no seu activity_main.xml
@@ -28,14 +56,9 @@ class MainActivity : AppCompatActivity() {
 
         // 3. Configuração do Listener
         btnEntrar.setOnClickListener {
-            // Se a validação do CPF for bem-sucedida, avance!
-            if (validarEProsseguir()) {
-                val intent = Intent(this, SelectTruckActivity::class.java)
-                // Remove caracteres não numéricos antes de enviar o CPF
-                val cpfLimpo = etCpf.text.toString().replace("[^\\d]".toRegex(), "")
-                intent.putExtra("cpf", cpfLimpo)
-                startActivity(intent)
-            }
+            val intent = Intent(this, SelectTruckActivity::class.java)
+            intent.putExtra("cpf", etCpf.text.toString())
+            startActivity(intent)
         }
     }
 
@@ -109,5 +132,9 @@ class MainActivity : AppCompatActivity() {
         val resto = soma % 11
         // Regra de obtenção do dígito: se o resto for 0 ou 1, o DV é 0. Caso contrário, DV é 11 - resto.
         return if (resto < 2) 0 else 11 - resto
+    }
+
+    private fun showLoading(show: Boolean) {
+        loadingLayout.visibility = if (show) View.VISIBLE else View.GONE
     }
 }

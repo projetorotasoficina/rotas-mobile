@@ -9,6 +9,8 @@ import android.location.Location
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import br.edu.utfpr.geocoleta.Data.Models.Coordinates
+import br.edu.utfpr.geocoleta.Data.Repository.CoordinatesRepository
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -20,11 +22,12 @@ class LocationService : Service() {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
+    private lateinit var coordinatesRepository: CoordinatesRepository
 
     override fun onCreate() {
         super.onCreate()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
+        coordinatesRepository = CoordinatesRepository(this)
         createNotificationChannel()
 
         val notification: Notification = NotificationCompat.Builder(this, "location_channel")
@@ -46,9 +49,9 @@ class LocationService : Service() {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 for (location: Location in result.locations) {
-                    // TODO: Salvar ou enviar localização
-                    // Exemplo:
-                    println("Lat: ${location.latitude}, Lng: ${location.longitude}")
+                    // TODO: Alterar o id da rota para a rota escolhida pelo usuário
+                    val coordenada = Coordinates(0, 1, location.latitude, location.longitude)
+                    coordinatesRepository.insert(coordenada)
                 }
             }
         }

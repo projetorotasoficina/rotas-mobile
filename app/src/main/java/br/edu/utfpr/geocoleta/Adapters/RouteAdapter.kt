@@ -6,35 +6,38 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
-import br.edu.utfpr.geocoleta.Models.Route
+import br.edu.utfpr.geocoleta.Data.Models.Route
 import br.edu.utfpr.geocoleta.R
 
 class RouteAdapter(
-    private val listaRotas: List<Route>,
+    private var routes: List<Route>,
     private val onItemClick: (Route) -> Unit
-) : RecyclerView.Adapter<RouteAdapter.RotaViewHolder>() {
+) : RecyclerView.Adapter<RouteAdapter.RouteViewHolder>() {
 
-    inner class RotaViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val tvTitulo: TextView = itemView.findViewById(R.id.tvTituloRota)
-        val tvDescricao: TextView = itemView.findViewById(R.id.tvDescricaoRota)
-    }
+    inner class RouteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val nomeTextView: TextView = itemView.findViewById(R.id.tvTituloRota)
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RotaViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_rote, parent, false)
-        return RotaViewHolder(view)
-    }
-
-    override fun onBindViewHolder(holder: RotaViewHolder, position: Int) {
-        val rota = listaRotas[position]
-        holder.tvTitulo.text = rota.titulo
-        holder.tvDescricao.text = rota.descricao
-
-        // Clique no card
-        holder.itemView.setOnClickListener {
-            onItemClick(rota)
+        fun bind(route: Route) {
+            nomeTextView.text = route.nome
+            itemView.setOnClickListener { onItemClick(route) }
         }
     }
 
-    override fun getItemCount(): Int = listaRotas.size
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RouteViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_rote, parent, false)
+        return RouteViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: RouteViewHolder, position: Int) {
+        val route = routes[position]
+        holder.bind(route)
+    }
+
+    override fun getItemCount(): Int = routes.size
+
+    fun updateList(newRoutes: List<Route>) {
+        routes = newRoutes
+        notifyDataSetChanged()
+    }
 }

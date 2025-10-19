@@ -90,9 +90,5 @@ class InitActivity : AppCompatActivity() {
         // 1. Inicia o serviço de localização (se for essencial rodar ANTES do login)
         startLocationService()
 
-        // 2. Navega para a tela de Login/CPF (MainActivity)
-        val intent = Intent(this, MainActivity::class.java)
-        startActivity(intent)
-        finish() // 💡 Boa Prática: Fecha a InitActivity para que o usuário não possa voltar
     }
 }
