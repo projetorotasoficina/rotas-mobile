@@ -3,8 +3,8 @@ package br.edu.utfpr.geocoleta.Adapters
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import br.edu.utfpr.geocoleta.Data.Models.Truck
 import br.edu.utfpr.geocoleta.R
@@ -19,7 +19,7 @@ class TruckAdapter(
     inner class TruckViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvPlaca: TextView = itemView.findViewById(R.id.tvPlaca)
         val tvDescricao: TextView = itemView.findViewById(R.id.tvDescricao)
-        val card: LinearLayout = itemView as LinearLayout
+        val card: CardView = itemView as CardView
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TruckViewHolder {
