@@ -4,143 +4,51 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="@drawable/background_"
     tools:context=".Activities.MainActivity">
 
-    <LinearLayout
-        android:id="@+id/headerContainer"
+    <TextView
+        android:id="@+id/tvCpf"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginStart="@dimen/spacing_lg"
-        android:layout_marginTop="@dimen/spacing_lg"
+        android:text="Informe seu CPF:"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        android:textStyle="bold"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <ImageView
-            android:id="@+id/imageView3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            app:srcCompat="@drawable/baseline_recycling_24" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="GeoColeta"
-            android:textAppearance="@style/TextAppearance.Subtitle"
-            android:textColor="@color/foreground" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/loginForm"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:padding="@dimen/padding_xl"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/etCpf"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintVertical_bias="0.4">
+        app:layout_constraintVertical_chainStyle="packed"
+        android:layout_marginBottom="16dp"/>
 
-        <ImageView
-            android:id="@+id/imageView5"
-            android:layout_width="312dp"
-            android:layout_height="261dp"
-            app:srcCompat="@drawable/login_image" />
+    <EditText
+        android:id="@+id/etCpf"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Digite seu CPF"
+        android:inputType="number"
+        android:padding="12dp"
+        android:textColor="@android:color/black"
+        android:textColorHint="@android:color/darker_gray"
+        app:layout_constraintTop_toBottomOf="@id/tvCpf"
+        app:layout_constraintBottom_toTopOf="@+id/btnEntrar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.7"
+        android:layout_marginBottom="24dp"/>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Acesse o GeoColeta"
-            android:textAppearance="@style/TextAppearance.Headline"
-            android:textColor="@color/foreground"
-            android:layout_marginBottom="@dimen/spacing_sm" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/spacing_xl"
-            android:text="Entre usando seu CPF cadastrado"
-            android:textAppearance="@style/TextAppearance.Body"
-            android:textColor="@color/muted_foreground" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="@dimen/spacing_lg">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/spacing_xs"
-                android:text="CPF"
-                android:textAppearance="@style/TextAppearance.Label"
-                android:textColor="@color/destructive" />
-
-            <EditText
-                android:id="@+id/etCpf"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/input_height"
-                android:background="@drawable/input_error_background"
-                android:hint="000.000.000-00"
-                android:inputType="number"
-                android:padding="@dimen/padding_md"
-                android:textAppearance="@style/TextAppearance.Body"
-                android:textColor="@color/foreground"
-                android:textColorHint="@color/muted_foreground" />
-
-            <TextView
-                android:id="@+id/tvErroCpf"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_xs"
-                android:text="Digite um CPF válido"
-                android:textAppearance="@style/TextAppearance.Caption"
-                android:textColor="@color/destructive"
-                android:visibility="gone" />
-
-            <com.google.android.material.checkbox.MaterialCheckBox
-                android:id="@+id/cbLembrarCpf"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_md"
-                android:text="Lembrar CPF"
-                android:textAppearance="@style/TextAppearance.Body"
-                android:textColor="@color/muted_foreground"
-                app:buttonTint="@color/primary_blue"
-                />
-
-        </LinearLayout>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnEntrar"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginBottom="@dimen/spacing_xl"
-
-            android:text="Continuar"
-            android:textSize="16sp"
-            android:elevation="0dp"
-
-            app:backgroundTint="@color/primary_blue"
-            android:textColor="@color/white"
-            app:cornerRadius="10dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Ao prosseguir, você concorda com nossos Termos de Uso e Política de Privacidade."
-            android:textAppearance="@style/TextAppearance.Caption"
-            android:textColor="@color/muted_foreground"
-            android:gravity="center"
-            android:textSize="@dimen/text_sm" />
-
-    </LinearLayout>
+    <Button
+        android:id="@+id/btnEntrar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Entrar"
+        android:textColor="@android:color/white"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        app:layout_constraintTop_toBottomOf="@id/etCpf"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

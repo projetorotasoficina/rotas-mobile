@@ -1,99 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="@dimen/margin_sm"
-    android:layout_marginEnd="@dimen/margin_sm"
-    android:layout_marginBottom="@dimen/margin_sm"
-    app:cardCornerRadius="@dimen/radius_lg"
-    app:cardElevation="@dimen/elevation_sm"
-    android:foreground="?android:attr/selectableItemBackground"
-    android:clickable="true"
-    android:focusable="true">
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:layout_marginBottom="12dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/tvPlaca"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/padding_md"
-        android:gravity="center_vertical">
+        android:text="PLACA ACB000"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:textColor="@android:color/black" />
 
-        <!-- Header do caminhão -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="@dimen/spacing_sm">
+    <TextView
+        android:id="@+id/tvDescricao"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Caminhão Volvo, azul"
+        android:textSize="14sp"
+        android:textColor="@android:color/black" />
 
-            <!-- Ícone do caminhão -->
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_truck"
-                android:layout_marginEnd="@dimen/spacing_sm"
-                android:contentDescription="Ícone do caminhão" />
-
-            <!-- Placa do caminhão -->
-            <TextView
-                android:id="@+id/tvPlaca"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="ACB-0000"
-                android:textAppearance="@style/TextAppearance.Subtitle"
-                android:textColor="@color/foreground" />
-
-            <!-- Badge de disponibilidade -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="DISPONÍVEL"
-                android:textAppearance="@style/TextAppearance.Caption"
-                android:textColor="@color/success"
-                android:textStyle="bold"
-                android:background="@drawable/badge_success"
-                android:padding="@dimen/spacing_xs"
-                android:layout_marginStart="@dimen/spacing_sm" />
-
-        </LinearLayout>
-
-        <!-- Descrição do caminhão -->
-        <TextView
-            android:id="@+id/tvDescricao"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Caminhão Volvo, azul"
-            android:textAppearance="@style/TextAppearance.Body"
-            android:textColor="@color/muted_foreground"
-            android:layout_marginBottom="@dimen/spacing_sm" />
-
-        <!-- Informações técnicas -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Capacidade: 8 ton"
-                android:textAppearance="@style/TextAppearance.Caption"
-                android:textColor="@color/muted_foreground" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Modelo 2020"
-                android:textAppearance="@style/TextAppearance.Caption"
-                android:textColor="@color/primary"
-                android:textStyle="bold" />
-
-        </LinearLayout>
-
-    </LinearLayout>
-
-</androidx.cardview.widget.CardView>
+</LinearLayout>
