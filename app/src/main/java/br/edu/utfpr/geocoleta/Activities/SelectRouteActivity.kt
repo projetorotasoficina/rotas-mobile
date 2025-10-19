@@ -59,12 +59,10 @@ class SelectRouteActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                // Busca as rotas usando o Service em background
                 val routes = withContext(Dispatchers.IO) {
                     routeRepository.listAll()
                 }
 
-                // Atualiza UI na thread principal
                 withContext(Dispatchers.Main) {
                     if (routes.isEmpty()) {
                         Toast.makeText(

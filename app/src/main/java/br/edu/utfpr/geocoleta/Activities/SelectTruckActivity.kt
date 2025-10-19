@@ -55,12 +55,10 @@ class SelectTruckActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                // Busca os caminhões usando o Service em background
                 val trucks = withContext(Dispatchers.IO) {
                     truckRepository.listAll()
                 }
 
-                // Atualiza UI na thread principal
                 withContext(Dispatchers.Main) {
                     if (trucks.isEmpty()) {
                         Toast.makeText(

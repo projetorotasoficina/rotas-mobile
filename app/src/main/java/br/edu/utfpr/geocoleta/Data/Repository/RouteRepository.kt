@@ -13,16 +13,31 @@ class RouteRepository (context: Context) {
 
     fun insert(route: Route): Long {
         val db = dbHelper.writableDatabase
-        val values = ContentValues().apply {
-            put(DatabaseContract.Rota.COLUMN_NOME, route.nome)
-            put(DatabaseContract.Rota.COLUMN_TIPO_COLETA, route.tipoColeta)
-            put(DatabaseContract.Rota.COLUMN_TIPO_RESIDUOS, route.tipoResiduo)
-            put(DatabaseContract.Rota.COLUMN_OBSERVACOES, route.observacoes)
-            put(DatabaseContract.Rota.COLUMN_ATIVO, if (route.ativo) 1 else 0)
+
+        val cursor = db.query(
+            DatabaseContract.Rota.TABLE_NAME,
+            arrayOf(DatabaseContract.Rota.COLUMN_ID),
+            "${DatabaseContract.Rota.COLUMN_ID} = ?",
+            arrayOf(route.id.toString()),
+            null, null, null
+        )
+
+        val exists = cursor.moveToFirst()
+        cursor.close()
+
+        return if (exists) {
+            update(route).toLong()
+        } else {
+            val values = ContentValues().apply {
+                put(DatabaseContract.Rota.COLUMN_ID, route.id)
+                put(DatabaseContract.Rota.COLUMN_NOME, route.nome)
+                put(DatabaseContract.Rota.COLUMN_TIPO_COLETA, route.tipoColeta)
+                put(DatabaseContract.Rota.COLUMN_TIPO_RESIDUOS, route.tipoResiduo)
+                put(DatabaseContract.Rota.COLUMN_OBSERVACOES, route.observacoes)
+                put(DatabaseContract.Rota.COLUMN_ATIVO, if (route.ativo) 1 else 0)
+            }
+            db.insert(DatabaseContract.Rota.TABLE_NAME, null, values)
         }
-        val id = db.insert(DatabaseContract.Rota.TABLE_NAME, null, values)
-        db.close()
-        return id
     }
 
     fun update(route: Route): Int {

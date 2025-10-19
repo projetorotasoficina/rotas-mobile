@@ -13,14 +13,30 @@ class TruckerRepository (context: Context) {
 
     fun insert(motorista: Trucker): Long {
         val db = dbHelper.writableDatabase
-        val values = ContentValues().apply {
-            put(DatabaseContract.Motorista.COLUMN_NOME, motorista.nome)
-            put(DatabaseContract.Motorista.COLUMN_CPF, motorista.cpf)
-            put(DatabaseContract.Motorista.COLUMN_CNH_CATEGORIA, motorista.cnhCategoria)
-            put(DatabaseContract.Motorista.COLUMN_CNH_VALIDADE, motorista.cnhValidade)
-            put(DatabaseContract.Motorista.COLUMN_ATIVO, if (motorista.ativo) 1 else 0)
+        val cursor = db.query(
+            DatabaseContract.Motorista.TABLE_NAME,
+            arrayOf(DatabaseContract.Motorista.COLUMN_ID),
+            "${DatabaseContract.Motorista.COLUMN_ID} = ?",
+            arrayOf(motorista.id.toString()),
+            null, null, null
+        )
+
+        val exists = cursor.moveToFirst()
+        cursor.close()
+
+        return if (exists) {
+            update(motorista).toLong()
+        } else {
+            val values = ContentValues().apply {
+                put(DatabaseContract.Motorista.COLUMN_ID, motorista.id)
+                put(DatabaseContract.Motorista.COLUMN_NOME, motorista.nome)
+                put(DatabaseContract.Motorista.COLUMN_CPF, motorista.cpf)
+                put(DatabaseContract.Motorista.COLUMN_CNH_CATEGORIA, motorista.cnhCategoria)
+                put(DatabaseContract.Motorista.COLUMN_CNH_VALIDADE, motorista.cnhValidade)
+                put(DatabaseContract.Motorista.COLUMN_ATIVO, if (motorista.ativo) 1 else 0)
+            }
+            db.insert(DatabaseContract.Motorista.TABLE_NAME, null, values)
         }
-        return db.insert(DatabaseContract.Motorista.TABLE_NAME, null, values)
     }
 
     fun update(motorista: Trucker): Int {
