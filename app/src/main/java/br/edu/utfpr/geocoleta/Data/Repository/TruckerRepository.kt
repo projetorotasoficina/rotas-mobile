@@ -4,20 +4,21 @@ import android.content.ContentValues
 import android.content.Context
 import br.edu.utfpr.geocoleta.Data.DatabaseContract
 import br.edu.utfpr.geocoleta.Data.DatabaseHelper
-import br.edu.utfpr.geocoleta.Data.Models.Truck
 import br.edu.utfpr.geocoleta.Data.Models.Trucker
 import br.edu.utfpr.geocoleta.Data.Network.RetrovitClient
 
-class TruckerRepository (context: Context) {
+class TruckerRepository(context: Context) {
     private val dbHelper = DatabaseHelper(context)
+    private val apiService = RetrovitClient.api
 
-    fun insert(motorista: Trucker): Long {
+    fun insert(trucker: Trucker): Long {
         val db = dbHelper.writableDatabase
+
         val cursor = db.query(
             DatabaseContract.Motorista.TABLE_NAME,
             arrayOf(DatabaseContract.Motorista.COLUMN_ID),
             "${DatabaseContract.Motorista.COLUMN_ID} = ?",
-            arrayOf(motorista.id.toString()),
+            arrayOf(trucker.id.toString()),
             null, null, null
         )
 
@@ -25,44 +26,48 @@ class TruckerRepository (context: Context) {
         cursor.close()
 
         return if (exists) {
-            update(motorista).toLong()
+            update(trucker).toLong()
         } else {
             val values = ContentValues().apply {
-                put(DatabaseContract.Motorista.COLUMN_ID, motorista.id)
-                put(DatabaseContract.Motorista.COLUMN_NOME, motorista.nome)
-                put(DatabaseContract.Motorista.COLUMN_CPF, motorista.cpf)
-                put(DatabaseContract.Motorista.COLUMN_CNH_CATEGORIA, motorista.cnhCategoria)
-                put(DatabaseContract.Motorista.COLUMN_CNH_VALIDADE, motorista.cnhValidade)
-                put(DatabaseContract.Motorista.COLUMN_ATIVO, if (motorista.ativo) 1 else 0)
+                put(DatabaseContract.Motorista.COLUMN_ID, trucker.id)
+                put(DatabaseContract.Motorista.COLUMN_NOME, trucker.nome)
+                put(DatabaseContract.Motorista.COLUMN_CPF, trucker.cpf)
+                put(DatabaseContract.Motorista.COLUMN_CNH_CATEGORIA, trucker.cnhCategoria)
+                put(DatabaseContract.Motorista.COLUMN_CNH_VALIDADE, trucker.cnhValidade)
+                put(DatabaseContract.Motorista.COLUMN_ATIVO, if (trucker.ativo) 1 else 0)
             }
             db.insert(DatabaseContract.Motorista.TABLE_NAME, null, values)
         }
     }
 
-    fun update(motorista: Trucker): Int {
+    fun update(trucker: Trucker): Int {
         val db = dbHelper.writableDatabase
         val values = ContentValues().apply {
-            put(DatabaseContract.Motorista.COLUMN_NOME, motorista.nome)
-            put(DatabaseContract.Motorista.COLUMN_CPF, motorista.cpf)
-            put(DatabaseContract.Motorista.COLUMN_CNH_CATEGORIA, motorista.cnhCategoria)
-            put(DatabaseContract.Motorista.COLUMN_CNH_VALIDADE, motorista.cnhValidade)
-            put(DatabaseContract.Motorista.COLUMN_ATIVO, if (motorista.ativo) 1 else 0)
+            put(DatabaseContract.Motorista.COLUMN_NOME, trucker.nome)
+            put(DatabaseContract.Motorista.COLUMN_CPF, trucker.cpf)
+            put(DatabaseContract.Motorista.COLUMN_CNH_CATEGORIA, trucker.cnhCategoria)
+            put(DatabaseContract.Motorista.COLUMN_CNH_VALIDADE, trucker.cnhValidade)
+            put(DatabaseContract.Motorista.COLUMN_ATIVO, if (trucker.ativo) 1 else 0)
         }
-        return db.update(
+        val rows = db.update(
             DatabaseContract.Motorista.TABLE_NAME,
             values,
             "${DatabaseContract.Motorista.COLUMN_ID} = ?",
-            arrayOf(motorista.id.toString())
+            arrayOf(trucker.id.toString())
         )
+        db.close()
+        return rows
     }
 
     fun delete(id: Int): Int {
         val db = dbHelper.writableDatabase
-        return db.delete(
+        val rows = db.delete(
             DatabaseContract.Motorista.TABLE_NAME,
             "${DatabaseContract.Motorista.COLUMN_ID} = ?",
             arrayOf(id.toString())
         )
+        db.close()
+        return rows
     }
 
     fun listAll(): List<Trucker> {
@@ -100,9 +105,6 @@ class TruckerRepository (context: Context) {
     }
 
     suspend fun getTruckers(){
-        val truckers =RetrovitClient.api.getDrivers()
-        for (truck in truckers){
-            insert(truck)
-        }
+        apiService.getMotoristas().forEach { insert(it) }
     }
 }

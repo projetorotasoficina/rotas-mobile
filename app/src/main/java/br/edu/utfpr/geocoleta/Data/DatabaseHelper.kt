@@ -75,8 +75,8 @@ object DatabaseContract {
         const val COLUMN_MOTORISTA_ID = "motorista_id"
         const val COLUMN_DATA_INICIO = "data_inicio"
         const val COLUMN_DATA_FIM = "data_fim"
-        const val COLUM_DISTANCIA_TOTAL = "distancia_total"
         const val COLUMN_STATUS = "status"
+        const val COLUM_DISTANCIA_TOTAL = "distancia_total"
     }
 }
 
@@ -90,6 +90,7 @@ class DatabaseHelper(context: Context) :
         db.execSQL(createTableRota())
         db.execSQL(createTableCoordenada())
         db.execSQL(createTableIncidente())
+        db.execSQL(createTableTrajeto())
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -181,8 +182,9 @@ class DatabaseHelper(context: Context) :
             ${DatabaseContract.Trejeto.COLUMN_DATA_INICIO} TEXT,
             ${DatabaseContract.Trejeto.COLUMN_DATA_FIM} TEXT,
             ${DatabaseContract.Trejeto.COLUMN_STATUS} INTEGER,
-            FOREIGN KEY(${DatabaseContract.Trejeto.COLUMN_ROTA_ID}) REFERENCES ${DatabaseContract.Rota.TABLE_NAME}(${DatabaseContract.Rota.COLUMN_ID})
-            FOREIGN KEY(${DatabaseContract.Trejeto.COLUMN_MOTORISTA_ID}) REFERENCES ${DatabaseContract.Motorista.TABLE_NAME}(${DatabaseContract.Motorista.COLUMN_ID})
+            ${DatabaseContract.Trejeto.COLUM_DISTANCIA_TOTAL} REAL,
+            FOREIGN KEY(${DatabaseContract.Trejeto.COLUMN_ROTA_ID}) REFERENCES ${DatabaseContract.Rota.TABLE_NAME}(${DatabaseContract.Rota.COLUMN_ID}),
+            FOREIGN KEY(${DatabaseContract.Trejeto.COLUMN_MOTORISTA_ID}) REFERENCES ${DatabaseContract.Motorista.TABLE_NAME}(${DatabaseContract.Motorista.COLUMN_ID}),
             FOREIGN KEY(${DatabaseContract.Trejeto.COLUMN_CAMINHAO_ID}) REFERENCES ${DatabaseContract.Caminhao.TABLE_NAME}(${DatabaseContract.Caminhao.COLUMN_ID})
             
         )

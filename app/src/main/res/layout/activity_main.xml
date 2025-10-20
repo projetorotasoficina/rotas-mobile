@@ -76,18 +76,19 @@
             android:layout_marginBottom="@dimen/spacing_lg">
 
             <TextView
+                android:id="@+id/tvCpfLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_xs"
                 android:text="CPF"
                 android:textAppearance="@style/TextAppearance.Label"
-                android:textColor="@color/destructive" />
+                android:textColor="@color/foreground" />
 
             <EditText
                 android:id="@+id/etCpf"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/input_height"
-                android:background="@drawable/input_error_background"
+                android:background="@drawable/input_background"
                 android:hint="000.000.000-00"
                 android:inputType="number"
                 android:padding="@dimen/padding_md"

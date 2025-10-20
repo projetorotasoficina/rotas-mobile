@@ -7,9 +7,9 @@ import br.edu.utfpr.geocoleta.Data.DatabaseHelper
 import br.edu.utfpr.geocoleta.Data.Models.Route
 import br.edu.utfpr.geocoleta.Data.Network.RetrovitClient
 
-class RouteRepository (context: Context) {
+class RouteRepository(context: Context) {
     private val dbHelper = DatabaseHelper(context)
-
+    private val apiService = RetrovitClient.api
 
     fun insert(route: Route): Long {
         val db = dbHelper.writableDatabase
@@ -105,9 +105,6 @@ class RouteRepository (context: Context) {
     }
 
     suspend fun getRoutes(){
-        val routes = RetrovitClient.api.getRoutes()
-        for (route in routes){
-            insert(route)
-        }
+        apiService.getRotas().forEach { insert(it) }
     }
 }

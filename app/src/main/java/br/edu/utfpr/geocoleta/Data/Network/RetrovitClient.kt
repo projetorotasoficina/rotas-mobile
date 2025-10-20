@@ -1,5 +1,7 @@
 package br.edu.utfpr.geocoleta.Data.Network
 
+import android.content.Context
+import android.content.SharedPreferences
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
@@ -10,13 +12,26 @@ import java.util.concurrent.TimeUnit
 
 object RetrovitClient {
     private const val BASE_URL = "https://rotas-api-yqsi.onrender.com/api/"
-    private const val TOKEN = "cf8cdf14-9c50-4c5a-b96f-51d2b5fe978e"
+    private const val PREFS_NAME = "GeoColetaPrefs"
+    private const val TOKEN_KEY = "auth_token"
+
+    private lateinit var sharedPreferences: SharedPreferences
+
+    fun initialize(context: Context) {
+        sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    }
 
     private val authInterceptor = Interceptor { chain ->
-        val newRequest = chain.request().newBuilder()
-            .addHeader("X-App-Token", TOKEN)
-            .addHeader("Content-Type", "application/json")
-            .build()
+        val token = sharedPreferences.getString(TOKEN_KEY, null)
+        val requestBuilder = chain.request().newBuilder()
+
+        requestBuilder.addHeader("Content-Type", "application/json")
+
+        token?.let {
+            requestBuilder.addHeader("X-App-Token", it)
+        }
+
+        val newRequest = requestBuilder.build()
         chain.proceed(newRequest)
     }
 

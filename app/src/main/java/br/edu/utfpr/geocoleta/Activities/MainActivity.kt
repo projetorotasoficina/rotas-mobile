@@ -1,137 +1,216 @@
 package br.edu.utfpr.geocoleta.Activities
 
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
-import android.widget.Button
-import android.view.View // Importe para usar View.VISIBLE e View.GONE
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.View
 import android.widget.EditText
 import android.widget.FrameLayout
-import android.widget.TextView // Importe para referenciar o TextView de erro
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import br.edu.utfpr.geocoleta.Data.Repository.RouteRepository
 import br.edu.utfpr.geocoleta.Data.Repository.TruckRepository
 import br.edu.utfpr.geocoleta.Data.Repository.TruckerRepository
 import br.edu.utfpr.geocoleta.R
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.checkbox.MaterialCheckBox
 import kotlinx.coroutines.launch
-import com.google.android.material.button.MaterialButton // Use MaterialButton se estiver usando no XML
+import java.net.UnknownHostException
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var  repositoryTrucker : TruckerRepository
-    private lateinit var  repositoryTruck : TruckRepository
-    private lateinit var  repositoryRoute : RouteRepository
+    private lateinit var repositoryTrucker: TruckerRepository
+    private lateinit var repositoryTruck: TruckRepository
+    private lateinit var repositoryRoute: RouteRepository
     private lateinit var loadingLayout: FrameLayout
-    // 1. Declare as Views fora do onCreate para usá-las em funções diferentes
+
     private lateinit var etCpf: EditText
     private lateinit var tvErroCpf: TextView
-    private lateinit var btnEntrar: MaterialButton // Use MaterialButton para corresponder ao XML
+    private lateinit var tvCpfLabel: TextView
+    private lateinit var btnEntrar: MaterialButton
+    private lateinit var cbLembrarCpf: MaterialCheckBox
+
+    private lateinit var sharedPreferences: SharedPreferences
+    private val PREFS_NAME = "GeoColetaPrefs"
+    private val CPF_KEY = "cpf_key"
+    private val REMEMBER_CPF_KEY = "remember_cpf_key"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        setupViews()
+        setupListeners()
+        loadSavedCpf()
+        setupCpfMask()
+        syncData()
+    }
+
+    private fun setupViews() {
         loadingLayout = findViewById(R.id.loadingLayout)
+        etCpf = findViewById(R.id.etCpf)
+        tvErroCpf = findViewById(R.id.tvErroCpf)
+        tvCpfLabel = findViewById(R.id.tvCpfLabel)
+        btnEntrar = findViewById(R.id.btnEntrar)
+        cbLembrarCpf = findViewById(R.id.cbLembrarCpf)
+
         repositoryTrucker = TruckerRepository(this)
         repositoryTruck = TruckRepository(this)
         repositoryRoute = RouteRepository(this)
+        sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    }
+
+    private fun syncData() {
         lifecycleScope.launch {
             showLoading(true)
             try {
                 repositoryTrucker.getTruckers()
                 repositoryTruck.getTrucks()
                 repositoryRoute.getRoutes()
-            }catch (e : Exception){
+            } catch (e: UnknownHostException) {
+                Toast.makeText(this@MainActivity, "Falha na conexão. Verifique sua internet.", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@MainActivity, "Ocorreu um erro inesperado.", Toast.LENGTH_LONG).show()
                 e.printStackTrace()
-            }finally {
+            } finally {
                 showLoading(false)
             }
-
-        }
-
-        // 2. Vincule as Views (Busque o ID do TextView de erro que adicionamos)
-        etCpf = findViewById(R.id.etCpf)
-        // Certifique-se que o ID 'tvErroCpf' está no seu activity_main.xml
-        tvErroCpf = findViewById(R.id.tvErroCpf)
-        btnEntrar = findViewById(R.id.btnEntrar)
-
-        // 3. Configuração do Listener
-        btnEntrar.setOnClickListener {
-            val intent = Intent(this, SelectTruckActivity::class.java)
-            intent.putExtra("cpf", etCpf.text.toString())
-            startActivity(intent)
         }
     }
 
-    /**
-     * Função que realiza a validação e exibe o erro se necessário.
-     * @return true se o CPF for válido, false caso contrário.
-     */
+    private fun setupListeners() {
+        btnEntrar.setOnClickListener {
+            if (validarEProsseguir()) {
+                val intent = Intent(this, SelectTruckActivity::class.java)
+                intent.putExtra("cpf", etCpf.text.toString())
+                startActivity(intent)
+            }
+        }
+
+        etCpf.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                resetCpfErrorState()
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+    }
+
     private fun validarEProsseguir(): Boolean {
         val cpfDigitado = etCpf.text.toString().trim()
-        val cpfNumeros = cpfDigitado.replace("[^\\d]".toRegex(), "") // Limpa a string
+        val cpfNumeros = cpfDigitado.replace("[^\\d]".toRegex(), "")
 
-        // A. Validação de Campo Vazio e Tamanho Básico
         if (cpfDigitado.isEmpty()) {
-            tvErroCpf.text = "O campo CPF não pode estar vazio."
-            tvErroCpf.visibility = View.VISIBLE
+            showCpfError("O campo CPF não pode estar vazio.")
             return false
         }
-        if (cpfNumeros.length != 11) {
-            tvErroCpf.text = "O CPF deve ter 11 dígitos."
-            tvErroCpf.visibility = View.VISIBLE
-            return false
-        }
-
-        // B. Validação Matemática Real
-        if (!isCpfValido(cpfNumeros)) {
-            tvErroCpf.text = "Digite um CPF válido."
-            tvErroCpf.visibility = View.VISIBLE
+        if (cpfNumeros.length != 11 || !isCpfValido(cpfNumeros)) {
+            showCpfError("Digite um CPF válido.")
             return false
         }
 
-        // Se chegou aqui, é válido: oculta o erro e retorna true.
-        tvErroCpf.visibility = View.GONE
+        saveCpfPreference()
         return true
     }
 
-    /**
-     * Algoritmo de Validação de CPF (Complexo)
-     * Verifica os dígitos verificadores (DVs) do CPF.
-     */
+    private fun showCpfError(message: String) {
+        tvErroCpf.text = message
+        tvErroCpf.visibility = View.VISIBLE
+        etCpf.setBackgroundResource(R.drawable.input_error_background)
+        tvCpfLabel.setTextColor(ContextCompat.getColor(this, R.color.destructive))
+    }
+
+    private fun resetCpfErrorState() {
+        tvErroCpf.visibility = View.GONE
+        etCpf.setBackgroundResource(R.drawable.input_background)
+        tvCpfLabel.setTextColor(ContextCompat.getColor(this, R.color.foreground))
+    }
+
     private fun isCpfValido(cpf: String): Boolean {
-        // Bloqueia CPFs com todos os dígitos iguais (ex: 111.111.111-11)
         if (cpf.all { it == cpf[0] }) return false
 
         try {
-            // Conversão dos 9 primeiros dígitos para cálculo do 1º DV
-            val dv1Calculado = calcularDv(cpf.substring(0, 9), 10)
-
-            // Conversão dos 10 primeiros dígitos (incluindo o 1º DV) para cálculo do 2º DV
-            val dv2Calculado = calcularDv(cpf.substring(0, 10), 11)
-
-            // Compara os DVs calculados com os DVs do CPF original
-            return cpf[9].toString().toInt() == dv1Calculado && cpf[10].toString().toInt() == dv2Calculado
+            val dv1 = calcularDv(cpf.substring(0, 9), 10)
+            val dv2 = calcularDv(cpf.substring(0, 10), 11)
+            return cpf[9].toString().toInt() == dv1 && cpf[10].toString().toInt() == dv2
         } catch (e: Exception) {
-            // Em caso de erro na conversão ou cálculo
             return false
         }
     }
 
-    /**
-     * Função auxiliar para calcular o dígito verificador.
-     */
     private fun calcularDv(base: String, pesoInicial: Int): Int {
         var soma = 0
         var peso = pesoInicial
-
         for (i in base.indices) {
-            soma += base[i].toString().toInt() * peso
-            peso--
+            soma += base[i].toString().toInt() * peso--
         }
-
         val resto = soma % 11
-        // Regra de obtenção do dígito: se o resto for 0 ou 1, o DV é 0. Caso contrário, DV é 11 - resto.
         return if (resto < 2) 0 else 11 - resto
+    }
+
+    private fun setupCpfMask() {
+        etCpf.addTextChangedListener(object : TextWatcher {
+            private var isUpdating = false
+            private val mask = "###.###.###-##"
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val str = s.toString().replace("[^\\d]".toRegex(), "")
+                var cpf = ""
+
+                if (isUpdating) {
+                    isUpdating = false
+                    return
+                }
+
+                var i = 0
+                for (m in mask.toCharArray()) {
+                    if (m != '#' && str.length > i) {
+                        cpf += m
+                        continue
+                    }
+                    try {
+                        cpf += str[i]
+                    } catch (e: Exception) {
+                        break
+                    }
+                    i++
+                }
+
+                isUpdating = true
+                etCpf.setText(cpf)
+                etCpf.setSelection(cpf.length)
+                resetCpfErrorState()
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
+    }
+
+    private fun saveCpfPreference() {
+        val editor = sharedPreferences.edit()
+        if (cbLembrarCpf.isChecked) {
+            editor.putString(CPF_KEY, etCpf.text.toString())
+            editor.putBoolean(REMEMBER_CPF_KEY, true)
+        } else {
+            editor.remove(CPF_KEY)
+            editor.remove(REMEMBER_CPF_KEY)
+        }
+        editor.apply()
+    }
+
+    private fun loadSavedCpf() {
+        val remember = sharedPreferences.getBoolean(REMEMBER_CPF_KEY, false)
+        cbLembrarCpf.isChecked = remember
+        if (remember) {
+            etCpf.setText(sharedPreferences.getString(CPF_KEY, ""))
+        }
     }
 
     private fun showLoading(show: Boolean) {

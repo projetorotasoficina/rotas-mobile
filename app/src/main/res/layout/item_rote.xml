@@ -19,7 +19,6 @@
         android:padding="@dimen/padding_md"
         android:gravity="center_vertical">
 
-        <!-- Header da rota -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -27,15 +26,14 @@
             android:gravity="center_vertical"
             android:layout_marginBottom="@dimen/spacing_sm">
 
-            <!-- Ícone da rota -->
             <ImageView
+                android:id="@+id/ivIcon"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_route"
                 android:layout_marginEnd="@dimen/spacing_sm"
                 android:contentDescription="Ícone da rota" />
 
-            <!-- Título da rota -->
             <TextView
                 android:id="@+id/tvTituloRota"
                 android:layout_width="0dp"
@@ -45,21 +43,8 @@
                 android:textAppearance="@style/TextAppearance.Subtitle"
                 android:textColor="@color/foreground" />
 
-            <!-- Badge de status -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="ATIVA"
-                android:textAppearance="@style/TextAppearance.Caption"
-                android:textColor="@color/success"
-                android:textStyle="bold"
-                android:background="@drawable/badge_success"
-                android:padding="@dimen/spacing_xs"
-                android:layout_marginStart="@dimen/spacing_sm" />
-
         </LinearLayout>
 
-        <!-- Descrição da rota -->
         <TextView
             android:id="@+id/tvDescricaoRota"
             android:layout_width="match_parent"
@@ -68,31 +53,6 @@
             android:textAppearance="@style/TextAppearance.Body"
             android:textColor="@color/muted_foreground"
             android:layout_marginBottom="@dimen/spacing_sm" />
-
-        <!-- Informações adicionais -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Tipo: Resíduo Orgânico"
-                android:textAppearance="@style/TextAppearance.Caption"
-                android:textColor="@color/muted_foreground" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="5 pontos"
-                android:textAppearance="@style/TextAppearance.Caption"
-                android:textColor="@color/primary"
-                android:textStyle="bold" />
-
-        </LinearLayout>
 
     </LinearLayout>
 
