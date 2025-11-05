@@ -2,14 +2,26 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Permissões de Localização -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    
+    <!-- Permissão de Internet -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Permissões de Mídia e Câmera -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- Declaração de que o app usa a câmera, mas não é obrigatória -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
     <application
+        android:name=".GeoColetaApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -19,14 +31,33 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GeoColeta"
         tools:targetApi="31">
+        
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
+
         <activity
-            android:name=".Activities.MainActivity"
-            android:exported="true">
+            android:name=".Activities.SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.GeoColeta.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".Activities.MainActivity"
+            android:exported="false">
+        </activity>
+        <activity
+            android:name=".Activities.InitialSetupActivity"
+            android:exported="false">
         </activity>
         <activity
             android:name=".Activities.SelectTruckActivity"
@@ -37,7 +68,15 @@
             android:exported="true">
         </activity>
         <activity
-            android:name=".Activities.InitActivity"
+            android:name=".Activities.ConfirmSelectionActivity"
+            android:exported="true">
+        </activity>
+        <activity
+            android:name=".Activities.RouteInProgressActivity"
+            android:exported="true">
+        </activity>
+        <activity
+            android:name=".Activities.RegisterIncidentActivity"
             android:exported="true">
         </activity>
 

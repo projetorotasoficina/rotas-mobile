@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -30,6 +32,8 @@ class SelectTruckActivity : AppCompatActivity() {
     private lateinit var btnBuscar: MaterialButton
     private lateinit var btnConfirmar: MaterialButton
     private lateinit var recyclerView: RecyclerView
+    private lateinit var ivBack: ImageView
+    private lateinit var tvEmptyState: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +49,8 @@ class SelectTruckActivity : AppCompatActivity() {
         etBuscar = findViewById(R.id.etBuscarPlaca)
         btnBuscar = findViewById(R.id.btnBuscar)
         btnConfirmar = findViewById(R.id.btnConfirmar)
+        ivBack = findViewById(R.id.ivBack)
+        tvEmptyState = findViewById(R.id.tvEmptyState)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
         truckRepository = TruckRepository(this)
@@ -60,31 +66,19 @@ class SelectTruckActivity : AppCompatActivity() {
                 }
 
                 withContext(Dispatchers.Main) {
-                    if (trucks.isEmpty()) {
-                        Toast.makeText(
-                            this@SelectTruckActivity,
-                            "Nenhum caminhão encontrado no banco de dados.",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    } else {
+                    if (trucks.isNotEmpty()) {
                         setupRecyclerViewWithData(trucks)
-                        Toast.makeText(
-                            this@SelectTruckActivity,
-                            "${trucks.size} caminhão(ões) carregado(s).",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        tvEmptyState.visibility = View.GONE
+                    } else {
+                        tvEmptyState.visibility = View.VISIBLE
                     }
                     showLoading(false)
                 }
 
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        this@SelectTruckActivity,
-                        "Erro ao carregar caminhões: ${e.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
                     showLoading(false)
+                    tvEmptyState.visibility = View.VISIBLE
                 }
                 e.printStackTrace()
             }
@@ -96,7 +90,6 @@ class SelectTruckActivity : AppCompatActivity() {
 
         truckAdapter = TruckAdapter(listaTrucks) { selecionado ->
             truckSelecionado = selecionado
-            Toast.makeText(this, "Selecionou: ${selecionado.placa}", Toast.LENGTH_SHORT).show()
         }
 
         recyclerView.adapter = truckAdapter
@@ -110,6 +103,10 @@ class SelectTruckActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
+        ivBack.setOnClickListener {
+            finish()
+        }
+
         btnBuscar.setOnClickListener {
             handleSearch()
         }
@@ -132,21 +129,20 @@ class SelectTruckActivity : AppCompatActivity() {
         truckSelecionado = null
 
         if (filtrados.isEmpty()) {
-            Toast.makeText(this, "Nenhum caminhão encontrado com '$query'", Toast.LENGTH_SHORT).show()
+            tvEmptyState.visibility = View.VISIBLE
+        } else {
+            tvEmptyState.visibility = View.GONE
         }
     }
 
     private fun handleConfirmation() {
         truckSelecionado?.let { truck ->
-            Toast.makeText(this, "Confirmado: ${truck.placa}", Toast.LENGTH_SHORT).show()
-
             val intent = Intent(this, SelectRouteActivity::class.java).apply {
                 putExtra("placa", truck.placa)
                 putExtra("descricao", truck.modelo)
                 putExtra("truck_id", truck.id)
             }
             startActivity(intent)
-            finish()
 
         } ?: run {
             Toast.makeText(this, "Por favor, selecione um caminhão!", Toast.LENGTH_SHORT).show()

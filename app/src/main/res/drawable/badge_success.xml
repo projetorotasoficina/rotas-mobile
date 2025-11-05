@@ -5,3 +5,4 @@
     <corners android:radius="@dimen/radius_sm" />
     <stroke android:width="0dp" />
 </shape>
+

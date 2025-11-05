@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">GeoColeta</string>
+    <string name="map_placeholder">Map placeholder</string>
 </resources>

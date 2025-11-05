@@ -1,10 +1,14 @@
 package br.edu.utfpr.geocoleta.Adapters
 
+import android.annotation.SuppressLint
+import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import br.edu.utfpr.geocoleta.Data.Models.Truck
 import br.edu.utfpr.geocoleta.R
@@ -19,6 +23,8 @@ class TruckAdapter(
     inner class TruckViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvPlaca: TextView = itemView.findViewById(R.id.tvPlaca)
         val tvDescricao: TextView = itemView.findViewById(R.id.tvDescricao)
+        val ivIcon: ImageView = itemView.findViewById(R.id.ivIcon)
+        val tvStatus: TextView = itemView.findViewById(R.id.tvStatus)
         val card: CardView = itemView as CardView
     }
 
@@ -28,30 +34,47 @@ class TruckAdapter(
         return TruckViewHolder(view)
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onBindViewHolder(holder: TruckViewHolder, position: Int) {
         val truck = listaTrucks[position]
         holder.tvPlaca.text = "PLACA ${truck.placa}"
-//        holder.tvDescricao.text = truck.descricao
+        holder.tvDescricao.text = truck.modelo
 
-        // Fundo normal ou selecionado
-        if (position == selectedPosition) {
-//            holder.card.setBackgroundResource(R.drawable.bg_card_selected)
+        if (truck.ativo) {
+            holder.tvStatus.text = "DISPONÍVEL"
+            holder.tvStatus.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.success))
+            holder.tvStatus.setBackgroundResource(R.drawable.badge_success)
+            holder.itemView.alpha = 1.0f
+            holder.itemView.isClickable = true
         } else {
-//            holder.card.setBackgroundResource(R.drawable.bg_card)
+            holder.tvStatus.text = "INDISPONÍVEL"
+            holder.tvStatus.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.destructive))
+            holder.tvStatus.setBackgroundResource(R.drawable.badge_error)
+            holder.itemView.alpha = 0.5f
+            holder.itemView.isClickable = false
+        }
+
+        if (position == selectedPosition) {
+            holder.card.setCardBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.primary_light))
+            holder.ivIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(holder.itemView.context, R.color.primary_blue))
+        } else {
+            holder.card.setCardBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.card))
+            holder.ivIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(holder.itemView.context, R.color.default_icon_color))
         }
 
         holder.itemView.setOnClickListener {
-            val previousPosition = selectedPosition
-            selectedPosition = position
-            notifyItemChanged(previousPosition)
-            notifyItemChanged(selectedPosition)
-            onItemClick(truck)
+            if (truck.ativo) {
+                val previousPosition = selectedPosition
+                selectedPosition = holder.adapterPosition
+                notifyItemChanged(previousPosition)
+                notifyItemChanged(selectedPosition)
+                onItemClick(truck)
+            }
         }
     }
 
     override fun getItemCount(): Int = listaTrucks.size
 
-    // Atualiza lista (para busca)
     fun updateList(newList: List<Truck>) {
         listaTrucks = newList
         selectedPosition = RecyclerView.NO_POSITION

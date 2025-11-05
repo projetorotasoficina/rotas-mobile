@@ -6,4 +6,9 @@
     </style>
 
     <style name="Theme.GeoColeta" parent="Base.Theme.GeoColeta" />
+
+    <!-- Splash Screen Theme -->
+    <style name="Theme.GeoColeta.Splash" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowBackground">@drawable/screen_background</item>
+    </style>
 </resources>

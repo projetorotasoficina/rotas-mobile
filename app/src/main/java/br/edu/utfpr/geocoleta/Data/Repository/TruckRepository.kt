@@ -7,9 +7,9 @@ import br.edu.utfpr.geocoleta.Data.DatabaseHelper
 import br.edu.utfpr.geocoleta.Data.Models.Truck
 import br.edu.utfpr.geocoleta.Data.Network.RetrovitClient
 
-class TruckRepository (context: Context) {
-
+class TruckRepository(context: Context) {
     private val dbHelper = DatabaseHelper(context)
+    private val apiService = RetrovitClient.api
 
     fun insert(truck: Truck): Long {
         val db = dbHelper.writableDatabase
@@ -30,8 +30,8 @@ class TruckRepository (context: Context) {
         } else {
             val values = ContentValues().apply {
                 put(DatabaseContract.Caminhao.COLUMN_ID, truck.id)
-                put(DatabaseContract.Caminhao.COLUMN_PLACA, truck.placa)
                 put(DatabaseContract.Caminhao.COLUMN_MODELO, truck.modelo)
+                put(DatabaseContract.Caminhao.COLUMN_PLACA, truck.placa)
                 put(DatabaseContract.Caminhao.COLUMN_TIPO_COLETA, truck.tipoColeta)
                 put(DatabaseContract.Caminhao.COLUMN_TIPO_RESIDUO, truck.tipoResiduo)
                 put(DatabaseContract.Caminhao.COLUMN_STATUS, if (truck.ativo) 1 else 0)
@@ -43,8 +43,8 @@ class TruckRepository (context: Context) {
     fun update(truck: Truck): Int {
         val db = dbHelper.writableDatabase
         val values = ContentValues().apply {
-            put(DatabaseContract.Caminhao.COLUMN_PLACA, truck.placa)
             put(DatabaseContract.Caminhao.COLUMN_MODELO, truck.modelo)
+            put(DatabaseContract.Caminhao.COLUMN_PLACA, truck.placa)
             put(DatabaseContract.Caminhao.COLUMN_TIPO_COLETA, truck.tipoColeta)
             put(DatabaseContract.Caminhao.COLUMN_TIPO_RESIDUO, truck.tipoResiduo)
             put(DatabaseContract.Caminhao.COLUMN_STATUS, if (truck.ativo) 1 else 0)
@@ -81,19 +81,19 @@ class TruckRepository (context: Context) {
         with(cursor) {
             while (moveToNext()) {
                 val id = getInt(getColumnIndexOrThrow(DatabaseContract.Caminhao.COLUMN_ID))
-                val placa = getString(getColumnIndexOrThrow(DatabaseContract.Caminhao.COLUMN_PLACA))
                 val modelo = getString(getColumnIndexOrThrow(DatabaseContract.Caminhao.COLUMN_MODELO))
+                val placa = getString(getColumnIndexOrThrow(DatabaseContract.Caminhao.COLUMN_PLACA))
                 val tipoColeta = getInt(getColumnIndexOrThrow(DatabaseContract.Caminhao.COLUMN_TIPO_COLETA))
-                val tipoResiduo = getInt(getColumnIndexOrThrow(DatabaseContract.Caminhao.COLUMN_TIPO_RESIDUO))
+                val residuo = getInt(getColumnIndexOrThrow(DatabaseContract.Caminhao.COLUMN_TIPO_RESIDUO))
                 val ativo = getInt(getColumnIndexOrThrow(DatabaseContract.Caminhao.COLUMN_STATUS)) == 1
 
                 lista.add(
                     Truck(
                         id = id,
-                        placa = placa,
                         modelo = modelo,
+                        placa = placa,
                         tipoColeta = tipoColeta,
-                        tipoResiduo = tipoResiduo,
+                        tipoResiduo = residuo,
                         ativo = ativo
                     )
                 )
@@ -105,9 +105,6 @@ class TruckRepository (context: Context) {
     }
 
     suspend fun getTrucks(){
-        val trucks = RetrovitClient.api.getTrucks()
-        for (truck in trucks){
-            insert(truck)
-        }
+        apiService.getCaminhoes().forEach { insert(it) }
     }
 }

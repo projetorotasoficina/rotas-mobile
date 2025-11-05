@@ -29,6 +29,7 @@
 
             <!-- Ícone do caminhão -->
             <ImageView
+                android:id="@+id/ivIcon"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_truck"
@@ -47,6 +48,7 @@
 
             <!-- Badge de disponibilidade -->
             <TextView
+                android:id="@+id/tvStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="DISPONÍVEL"
