@@ -66,6 +66,7 @@ class SelectRouteActivity : AppCompatActivity() {
                 val modeloCaminhao = intent.getStringExtra("descricao")
 
                 val intent = Intent(this, ConfirmSelectionActivity::class.java).apply {
+                    putExtra("ROTA_ID", rota.id)
                     putExtra("ROTA_NOME", rota.nome)
                     putExtra("ROTA_OBSERVACOES", rota.observacoes)
                     putExtra("CAMINHAO_PLACA", placaCaminhao)

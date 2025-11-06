@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper
 
 object DatabaseContract {
     const val DATABASE_NAME = "geocoleta.db"
-    const val DATABASE_VERSION = 2
+    const val DATABASE_VERSION = 4
 
     object Caminhao {
         const val TABLE_NAME = "caminhao"
@@ -53,6 +53,9 @@ object DatabaseContract {
         const val COLUMN_ROTA_ID = "rota_id"
         const val COLUMN_LATITUDE = "latitude"
         const val COLUMN_LONGITUDE = "longitude"
+        const val COLUMN_STATUS_ENVIO = "status_envio"
+        const val COLUMN_HORARIO = "horario"
+        const val COLUMN_OBSERVACAO = "observacao"
     }
 
     object Incidente {
@@ -155,6 +158,9 @@ class DatabaseHelper(context: Context) :
             ${DatabaseContract.Coordenada.COLUMN_ROTA_ID} INTEGER NOT NULL,
             ${DatabaseContract.Coordenada.COLUMN_LATITUDE} REAL NOT NULL,
             ${DatabaseContract.Coordenada.COLUMN_LONGITUDE} REAL NOT NULL,
+            ${DatabaseContract.Coordenada.COLUMN_STATUS_ENVIO} INTEGER NOT NULL DEFAULT 'PENDENTE',
+            ${DatabaseContract.Coordenada.COLUMN_HORARIO} TEXT,
+            ${DatabaseContract.Coordenada.COLUMN_OBSERVACAO} TEXT DEFAULT 'Sem observacao',
             FOREIGN KEY(${DatabaseContract.Coordenada.COLUMN_ROTA_ID}) REFERENCES ${DatabaseContract.Rota.TABLE_NAME}(${DatabaseContract.Rota.COLUMN_ID})
         )
     """.trimIndent()

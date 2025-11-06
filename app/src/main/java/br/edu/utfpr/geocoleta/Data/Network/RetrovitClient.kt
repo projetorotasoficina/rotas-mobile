@@ -2,6 +2,7 @@ package br.edu.utfpr.geocoleta.Data.Network
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
@@ -26,16 +27,26 @@ object RetrovitClient {
         val requestBuilder = chain.request().newBuilder()
 
         requestBuilder.addHeader("Content-Type", "application/json")
+        token?.let { requestBuilder.addHeader("X-App-Token", it) }
 
-        token?.let {
-            requestBuilder.addHeader("X-App-Token", it)
-        }
+        val request = requestBuilder.build()
 
-        val newRequest = requestBuilder.build()
-        chain.proceed(newRequest)
+        // 🔹 Log simples da requisição
+        Log.i("RetrofitDebug", "➡️ REQUEST ${request.method} ${request.url}")
+        Log.i("RetrofitDebug", "Headers: ${request.headers}")
+
+        val response = chain.proceed(request)
+
+        // 🔹 Log simples da resposta
+        Log.i("RetrofitDebug", "⬅️ RESPONSE ${response.code} ${response.message}")
+
+        response
     }
 
-    private val logging = HttpLoggingInterceptor().apply {
+    private val logging = HttpLoggingInterceptor { message ->
+        // Opcional: imprime body da requisição e resposta
+        Log.i("RetrofitDebug", message)
+    }.apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
 

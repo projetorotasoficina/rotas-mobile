@@ -17,6 +17,7 @@ class ConfirmSelectionActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityConfirmSelectionBinding
     private lateinit var ivBack: ImageView
+    private var rotaId: Int = 0
 
     private val locationPermissions = arrayOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -38,6 +39,7 @@ class ConfirmSelectionActivity : AppCompatActivity() {
 
         ivBack = findViewById(R.id.ivBack)
 
+        rotaId = intent.getIntExtra("ROTA_ID", 0)
         val rotaNome = intent.getStringExtra("ROTA_NOME")
         val rotaObservacoes = intent.getStringExtra("ROTA_OBSERVACOES")
         val caminhaoPlaca = intent.getStringExtra("CAMINHAO_PLACA")
@@ -88,12 +90,17 @@ class ConfirmSelectionActivity : AppCompatActivity() {
 
     private fun startAppFlow() {
         startLocationService()
-        val intent = Intent(this, RouteInProgressActivity::class.java)
+        val intent = Intent(this, RouteInProgressActivity::class.java).apply {
+            putExtra("ROTA_ID",rotaId)
+        }
         startActivity(intent)
     }
 
     private fun startLocationService() {
-        val intent = Intent(this, LocationService::class.java)
+        val intent = Intent(this, LocationService::class.java).apply {
+            putExtra("ROTA_ID",rotaId)
+        }
+
         ContextCompat.startForegroundService(this, intent)
     }
 }
