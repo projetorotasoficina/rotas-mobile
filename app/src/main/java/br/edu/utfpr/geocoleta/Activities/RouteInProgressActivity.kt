@@ -92,7 +92,7 @@ class RouteInProgressActivity : AppCompatActivity() {
                 ).show()
                 e.printStackTrace()
             } finally {
-                val intent = Intent(this@RouteInProgressActivity, SelectRouteActivity::class.java)
+                val intent = Intent(this@RouteInProgressActivity, MainActivity::class.java)
                 startActivity(intent)
             }
         }
