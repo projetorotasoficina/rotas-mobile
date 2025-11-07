@@ -60,7 +60,7 @@
                 android:layout_width="0dp"
                 android:layout_height="@dimen/input_height"
                 android:layout_weight="1"
-                android:hint="Buscar por placa"
+                android:hint="Buscar..."
                 android:inputType="text"
                 android:background="@drawable/input_background"
                 android:textAppearance="@style/TextAppearance.Body"
@@ -68,19 +68,6 @@
                 android:textColorHint="@color/muted_foreground"
                 android:padding="@dimen/padding_md"
                 android:layout_marginEnd="@dimen/spacing_sm" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnBuscar"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:text="Buscar"
-                android:textSize="14sp"
-                android:elevation="0dp"
-                android:textColor="@color/primary_blue"
-                app:backgroundTint="@color/white"
-                app:strokeColor="@color/primary_blue"
-                app:strokeWidth="1dp"
-                app:cornerRadius="10dp" />
 
         </LinearLayout>
 

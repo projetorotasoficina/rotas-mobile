@@ -2,6 +2,8 @@ package br.edu.utfpr.geocoleta.Activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
@@ -29,7 +31,6 @@ class SelectTruckActivity : AppCompatActivity() {
     private var truckSelecionado: Truck? = null
 
     private lateinit var etBuscar: EditText
-    private lateinit var btnBuscar: MaterialButton
     private lateinit var btnConfirmar: MaterialButton
     private lateinit var recyclerView: RecyclerView
     private lateinit var ivBack: ImageView
@@ -47,7 +48,6 @@ class SelectTruckActivity : AppCompatActivity() {
     private fun setupViews() {
         recyclerView = findViewById(R.id.recyclerViewTrucks)
         etBuscar = findViewById(R.id.etBuscarPlaca)
-        btnBuscar = findViewById(R.id.btnBuscar)
         btnConfirmar = findViewById(R.id.btnConfirmar)
         ivBack = findViewById(R.id.ivBack)
         tvEmptyState = findViewById(R.id.tvEmptyState)
@@ -67,7 +67,7 @@ class SelectTruckActivity : AppCompatActivity() {
 
                 withContext(Dispatchers.Main) {
                     if (trucks.isNotEmpty()) {
-                        setupRecyclerViewWithData(trucks)
+                        setupRecyclerViewWithData(trucks.sortedByDescending { it.ativo })
                         tvEmptyState.visibility = View.GONE
                     } else {
                         tvEmptyState.visibility = View.VISIBLE
@@ -97,7 +97,6 @@ class SelectTruckActivity : AppCompatActivity() {
 
     private fun showLoading(isLoading: Boolean) {
         recyclerView.visibility = if (isLoading) View.GONE else View.VISIBLE
-        btnBuscar.isEnabled = !isLoading
         btnConfirmar.isEnabled = !isLoading
         etBuscar.isEnabled = !isLoading
     }
@@ -107,9 +106,15 @@ class SelectTruckActivity : AppCompatActivity() {
             finish()
         }
 
-        btnBuscar.setOnClickListener {
-            handleSearch()
-        }
+        etBuscar.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                handleSearch()
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
 
         btnConfirmar.setOnClickListener {
             handleConfirmation()
@@ -117,15 +122,17 @@ class SelectTruckActivity : AppCompatActivity() {
     }
 
     private fun handleSearch() {
-        val query = etBuscar.text.toString().trim().uppercase()
+        val query = etBuscar.text.toString().trim()
 
         val filtrados = if (query.isEmpty()) {
             listaTrucks
         } else {
-            listaTrucks.filter { it.placa.contains(query, ignoreCase = true) }
+            listaTrucks.filter {
+                it.placa.contains(query, ignoreCase = true) || it.modelo.contains(query, ignoreCase = true)
+            }
         }
 
-        truckAdapter.updateList(filtrados)
+        truckAdapter.updateList(filtrados.sortedByDescending { it.ativo })
         truckSelecionado = null
 
         if (filtrados.isEmpty()) {
