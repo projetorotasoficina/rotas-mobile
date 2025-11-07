@@ -17,12 +17,17 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 class LocationService : Service() {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
     private lateinit var coordinatesRepository: CoordinatesRepository
+    private var rotaId: Int = 0
 
     override fun onCreate() {
         super.onCreate()
@@ -37,8 +42,14 @@ class LocationService : Service() {
             .build()
 
         startForeground(1, notification)
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+        rotaId = intent?.getIntExtra("ROTA_ID", 0) ?: 0
 
         startLocationUpdates()
+        return START_STICKY
     }
 
     private fun startLocationUpdates() {
@@ -49,8 +60,13 @@ class LocationService : Service() {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 for (location: Location in result.locations) {
-                    // TODO: Alterar o id da rota para a rota escolhida pelo usuário
-                    val coordenada = Coordinates(0, 1, location.latitude, location.longitude)
+                    val date = Date(location.time)
+
+                    val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+                    dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+                    val dateString = dateFormat.format(date)
+
+                    val coordenada = Coordinates( 0,rotaId, location.latitude, location.longitude, dateString, "")
                     coordinatesRepository.insert(coordenada)
                 }
             }

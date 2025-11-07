@@ -104,6 +104,43 @@ class TruckerRepository(context: Context) {
         return lista
     }
 
+    fun findByCpf(cpf: String): Trucker? {
+        val db = dbHelper.readableDatabase
+        val cursor = db.query(
+            DatabaseContract.Motorista.TABLE_NAME,
+            null,
+            "${DatabaseContract.Motorista.COLUMN_CPF} = ?",
+            arrayOf(cpf),
+            null,
+            null,
+            null
+        )
+
+        var trucker: Trucker? = null
+        with(cursor) {
+            if (moveToFirst()) {
+                val id = getInt(getColumnIndexOrThrow(DatabaseContract.Motorista.COLUMN_ID))
+                val nome = getString(getColumnIndexOrThrow(DatabaseContract.Motorista.COLUMN_NOME))
+                val cnhCategoria = getString(getColumnIndexOrThrow(DatabaseContract.Motorista.COLUMN_CNH_CATEGORIA))
+                val cnhValidade = getString(getColumnIndexOrThrow(DatabaseContract.Motorista.COLUMN_CNH_VALIDADE))
+                val ativo = getInt(getColumnIndexOrThrow(DatabaseContract.Motorista.COLUMN_ATIVO)) == 1
+
+                trucker = Trucker(
+                    id = id,
+                    nome = nome,
+                    cpf = cpf,
+                    cnhCategoria = cnhCategoria,
+                    cnhValidade = cnhValidade,
+                    ativo = ativo
+                )
+            }
+        }
+
+        cursor.close()
+        db.close()
+        return trucker
+    }
+
     suspend fun getTruckers(){
         apiService.getMotoristas().forEach { insert(it) }
     }

@@ -72,12 +72,15 @@ class SelectRouteActivity : AppCompatActivity() {
             selectedRoute?.let { rota ->
                 val placaCaminhao = intent.getStringExtra("placa")
                 val modeloCaminhao = intent.getStringExtra("descricao")
+                val caminhao_id = intent.getIntExtra("truck_id", 0)
 
                 val intent = Intent(this, ConfirmSelectionActivity::class.java).apply {
+                    putExtra("ROTA_ID", rota.id)
                     putExtra("ROTA_NOME", rota.nome)
                     putExtra("ROTA_OBSERVACOES", rota.observacoes)
                     putExtra("CAMINHAO_PLACA", placaCaminhao)
                     putExtra("CAMINHAO_MODELO", modeloCaminhao)
+                    putExtra("CAMINHAO_ID", caminhao_id)
                 }
                 startActivity(intent)
 

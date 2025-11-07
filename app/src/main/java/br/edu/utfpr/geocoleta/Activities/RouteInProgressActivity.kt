@@ -5,18 +5,27 @@ import android.os.Bundle
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import br.edu.utfpr.geocoleta.Data.Network.RetrovitClient
+import br.edu.utfpr.geocoleta.Data.Repository.CoordinatesRepository
 import br.edu.utfpr.geocoleta.R
+import br.edu.utfpr.geocoleta.Service.LocationService
 import br.edu.utfpr.geocoleta.databinding.ActivityRouteInProgressBinding
+import kotlinx.coroutines.launch
 
 class RouteInProgressActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityRouteInProgressBinding
     private lateinit var ivBack: ImageView
+    private var rotaId: Int = 0
+    private var trajetoId : Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityRouteInProgressBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        rotaId = intent?.getIntExtra("ROTA_ID", 0) ?: 0
+        trajetoId = intent?.getIntExtra("TRAJETO_ID", 0) ?: 0
 
         ivBack = findViewById(R.id.ivBack)
 
@@ -30,10 +39,102 @@ class RouteInProgressActivity : AppCompatActivity() {
         }
 
         binding.finishRouteButton.setOnClickListener {
-            Toast.makeText(this, "Rota Finalizada com sucesso!", Toast.LENGTH_SHORT).show()
-            val intent = Intent(this, MainActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
+            Toast.makeText(this, "Finalizando rota...", Toast.LENGTH_SHORT).show()
+            lifecycleScope.launch {
+                val finalizadoComSucesso = finalizarTrajeto()
+
+                if (finalizadoComSucesso) {
+                    seendCoordinates()
+                } else {
+                    Toast.makeText(
+                        this@RouteInProgressActivity,
+                        "Falha ao finalizar trajeto. Coordenadas não serão enviadas.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
+    fun seendCoordinates(){
+        lifecycleScope.launch {
+            try {
+                val coordinates = CoordinatesRepository(this@RouteInProgressActivity).listByRotaId(rotaId)
+
+                if (coordinates.isNotEmpty()) {
+                    val response = RetrovitClient.api.sendCoordinate(coordinates)
+
+                    if (response.isSuccessful) {
+                        Toast.makeText(
+                            this@RouteInProgressActivity,
+                            "Coordenadas enviadas com sucesso!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        Toast.makeText(
+                            this@RouteInProgressActivity,
+                            "Falha ao enviar coordenadas: ${response.code()}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                } else {
+                    Toast.makeText(
+                        this@RouteInProgressActivity,
+                        "Nenhuma coordenada para enviar.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@RouteInProgressActivity,
+                    "Erro ao enviar coordenadas: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+                e.printStackTrace()
+            } finally {
+                val intent = Intent(this@RouteInProgressActivity, MainActivity::class.java)
+                startActivity(intent)
+            }
+        }
+    }
+
+    suspend fun finalizarTrajeto(): Boolean {
+        return try {
+            val response = RetrovitClient.api.finalizarTrajeto(trajetoId)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null) {
+                    Toast.makeText(
+                        this@RouteInProgressActivity,
+                        "Trajeto ${body.id} finalizado! Status: ${body.status}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    stopService(Intent(this@RouteInProgressActivity, LocationService::class.java))
+                    true
+                } else {
+                    Toast.makeText(
+                        this@RouteInProgressActivity,
+                        "Resposta vazia ao finalizar trajeto.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    false
+                }
+            } else {
+                Toast.makeText(
+                    this@RouteInProgressActivity,
+                    "Erro ao finalizar trajeto: ${response.code()}",
+                    Toast.LENGTH_LONG
+                ).show()
+                false
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(
+                this@RouteInProgressActivity,
+                "Falha na conexão: ${e.message}",
+                Toast.LENGTH_LONG
+            ).show()
+            false
         }
     }
 }
