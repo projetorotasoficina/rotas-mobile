@@ -2,6 +2,8 @@ package br.edu.utfpr.geocoleta.Activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
@@ -29,7 +31,6 @@ class SelectRouteActivity : AppCompatActivity() {
     private lateinit var ivBack: ImageView
     private lateinit var tvEmptyState: TextView
     private lateinit var etBuscar: EditText
-    private lateinit var btnBuscar: MaterialButton
     private lateinit var listaRotas: List<Route>
 
     private var selectedRoute: Route? = null
@@ -49,7 +50,6 @@ class SelectRouteActivity : AppCompatActivity() {
         ivBack = findViewById(R.id.ivBack)
         tvEmptyState = findViewById(R.id.tvEmptyState)
         etBuscar = findViewById(R.id.etBuscarRota)
-        btnBuscar = findViewById(R.id.btnBuscar)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
         routeRepository = RouteRepository(this)
@@ -58,7 +58,15 @@ class SelectRouteActivity : AppCompatActivity() {
     private fun setupListeners() {
         ivBack.setOnClickListener { finish() }
 
-        btnBuscar.setOnClickListener { handleSearch() }
+        etBuscar.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                handleSearch()
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
 
         btnConfirmar.setOnClickListener {
             selectedRoute?.let { rota ->
@@ -122,7 +130,10 @@ class SelectRouteActivity : AppCompatActivity() {
         val filtradas = if (query.isEmpty()) {
             listaRotas
         } else {
-            listaRotas.filter { it.nome.contains(query, ignoreCase = true) }
+            listaRotas.filter {
+                it.nome.contains(query, ignoreCase = true) || 
+                (it.observacoes?.contains(query, ignoreCase = true) ?: false)
+            }
         }
 
         routeAdapter.updateList(filtradas)
@@ -138,7 +149,6 @@ class SelectRouteActivity : AppCompatActivity() {
     private fun showLoading(isLoading: Boolean) {
         recyclerView.visibility = if (isLoading) View.GONE else View.VISIBLE
         btnConfirmar.isEnabled = !isLoading
-        btnBuscar.isEnabled = !isLoading
         etBuscar.isEnabled = !isLoading
     }
 }

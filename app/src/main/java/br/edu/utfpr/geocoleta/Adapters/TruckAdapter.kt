@@ -42,13 +42,13 @@ class TruckAdapter(
 
         if (truck.ativo) {
             holder.tvStatus.text = "DISPONÍVEL"
-            holder.tvStatus.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.success))
+            holder.tvStatus.setTextColor(ContextCompat.getColor(holder.itemView.context, android.R.color.white))
             holder.tvStatus.setBackgroundResource(R.drawable.badge_success)
             holder.itemView.alpha = 1.0f
             holder.itemView.isClickable = true
         } else {
             holder.tvStatus.text = "INDISPONÍVEL"
-            holder.tvStatus.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.destructive))
+            holder.tvStatus.setTextColor(ContextCompat.getColor(holder.itemView.context, android.R.color.white))
             holder.tvStatus.setBackgroundResource(R.drawable.badge_error)
             holder.itemView.alpha = 0.5f
             holder.itemView.isClickable = false
