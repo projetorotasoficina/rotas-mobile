@@ -113,6 +113,10 @@ class MainActivity : AppCompatActivity() {
             showCpfError("Digite um CPF válido.")
             return false
         }
+        val sharedCpf = getSharedPreferences("UserSession", Context.MODE_PRIVATE)
+        sharedCpf.edit()
+            .putString("cpf_usuario", etCpf.text.toString())
+            .apply()
 
         saveCpfPreference()
         return true

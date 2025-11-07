@@ -54,8 +54,8 @@ object RetrovitClient {
         .addInterceptor(authInterceptor)
         .addInterceptor(logging)
         .protocols(listOf(Protocol.HTTP_1_1))
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
+        .connectTimeout(5, TimeUnit.MINUTES)
+        .readTimeout(5, TimeUnit.MINUTES)
         .build()
 
     val api: ApiService by lazy {

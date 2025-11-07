@@ -1,23 +1,35 @@
 package br.edu.utfpr.geocoleta.Activities
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import br.edu.utfpr.geocoleta.Data.Models.Trajeto
+import br.edu.utfpr.geocoleta.Data.Models.Trucker
+import br.edu.utfpr.geocoleta.Data.Network.RetrovitClient
+import br.edu.utfpr.geocoleta.Data.Repository.TruckerRepository
 import br.edu.utfpr.geocoleta.R
 import br.edu.utfpr.geocoleta.Service.LocationService
 import br.edu.utfpr.geocoleta.databinding.ActivityConfirmSelectionBinding
+import kotlinx.coroutines.launch
 
 class ConfirmSelectionActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityConfirmSelectionBinding
     private lateinit var ivBack: ImageView
+    private lateinit var repositoryTrucker: TruckerRepository
     private var rotaId: Int = 0
+    private var caminhaoId: Int = 0
+    private lateinit var motorista: Trucker
+    private var rota_id_back : Int = 0
 
     private val locationPermissions = arrayOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -36,10 +48,31 @@ class ConfirmSelectionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityConfirmSelectionBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        repositoryTrucker = TruckerRepository(this)
+        val sharedCpf = getSharedPreferences("UserSession", Context.MODE_PRIVATE)
+        val cpf = sharedCpf.getString("cpf_usuario", null)?.replace("[^\\d]".toRegex(), "")
+
+        if (cpf.isNullOrEmpty()) {
+            Toast.makeText(this, "CPF não encontrado. Faça login novamente.", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
+
+        val motoristaEncontrado = repositoryTrucker.findByCpf(cpf)
+        if (motoristaEncontrado == null) {
+            Toast.makeText(this, "Motorista não encontrado para o CPF: $cpf", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
+
+
 
         ivBack = findViewById(R.id.ivBack)
 
         rotaId = intent.getIntExtra("ROTA_ID", 0)
+        caminhaoId = intent.getIntExtra("CAMINHAO_ID", 0)
+        motorista = repositoryTrucker.findByCpf(cpf!!)!!
+
         val rotaNome = intent.getStringExtra("ROTA_NOME")
         val rotaObservacoes = intent.getStringExtra("ROTA_OBSERVACOES")
         val caminhaoPlaca = intent.getStringExtra("CAMINHAO_PLACA")
@@ -90,6 +123,41 @@ class ConfirmSelectionActivity : AppCompatActivity() {
 
     private fun startAppFlow() {
         startLocationService()
+        lifecycleScope.launch {
+            try {
+                val trajeto = Trajeto(
+                    rotaId = rotaId,
+                    caminhaoId = caminhaoId,
+                    motoristaId = motorista.id
+                )
+
+                val response = RetrovitClient.api.registrarTrajeto(trajeto)
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body != null) {
+                        val id = body.id
+                        val rotaIdRetornado = body.rotaId
+                        val dataInicio = body.dataInicio
+                        val status = body.status
+
+                        rota_id_back = rotaIdRetornado
+
+                        Toast.makeText(this@ConfirmSelectionActivity, "Trajeto enviado com sucesso!", Toast.LENGTH_SHORT).show()
+
+                        val intent = Intent(this@ConfirmSelectionActivity, RouteInProgressActivity::class.java).apply {
+                            putExtra("TRAJETO_ID", id)
+                            putExtra("ROTA_ID", rotaId)
+                        }
+                        startActivity(intent)
+                    }
+                } else {
+                    Toast.makeText(this@ConfirmSelectionActivity, "Falha ao enviar: ${response.code()}", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(this@ConfirmSelectionActivity, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
         val intent = Intent(this, RouteInProgressActivity::class.java).apply {
             putExtra("ROTA_ID",rotaId)
         }
