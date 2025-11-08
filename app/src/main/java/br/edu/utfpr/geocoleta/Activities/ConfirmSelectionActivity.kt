@@ -11,25 +11,23 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
 import br.edu.utfpr.geocoleta.Data.Models.Trajeto
 import br.edu.utfpr.geocoleta.Data.Models.Trucker
-import br.edu.utfpr.geocoleta.Data.Network.RetrovitClient
+import br.edu.utfpr.geocoleta.Data.Repository.TrajetoRepository
 import br.edu.utfpr.geocoleta.Data.Repository.TruckerRepository
 import br.edu.utfpr.geocoleta.R
 import br.edu.utfpr.geocoleta.Service.LocationService
 import br.edu.utfpr.geocoleta.databinding.ActivityConfirmSelectionBinding
-import kotlinx.coroutines.launch
 
 class ConfirmSelectionActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityConfirmSelectionBinding
     private lateinit var ivBack: ImageView
     private lateinit var repositoryTrucker: TruckerRepository
+    private lateinit var trajetoRepository: TrajetoRepository
     private var rotaId: Int = 0
     private var caminhaoId: Int = 0
     private lateinit var motorista: Trucker
-    private var rota_id_back : Int = 0
 
     private val locationPermissions = arrayOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -49,6 +47,8 @@ class ConfirmSelectionActivity : AppCompatActivity() {
         binding = ActivityConfirmSelectionBinding.inflate(layoutInflater)
         setContentView(binding.root)
         repositoryTrucker = TruckerRepository(this)
+        trajetoRepository = TrajetoRepository(this)
+
         val sharedCpf = getSharedPreferences("UserSession", Context.MODE_PRIVATE)
         val cpf = sharedCpf.getString("cpf_usuario", null)?.replace("[^\\d]".toRegex(), "")
 
@@ -65,21 +65,19 @@ class ConfirmSelectionActivity : AppCompatActivity() {
             return
         }
 
-
-
         ivBack = findViewById(R.id.ivBack)
 
         rotaId = intent.getIntExtra("ROTA_ID", 0)
         caminhaoId = intent.getIntExtra("CAMINHAO_ID", 0)
-        motorista = repositoryTrucker.findByCpf(cpf!!)!!
+        motorista = repositoryTrucker.findByCpf(cpf)!!
 
         val rotaNome = intent.getStringExtra("ROTA_NOME")
         val rotaObservacoes = intent.getStringExtra("ROTA_OBSERVACOES")
         val caminhaoPlaca = intent.getStringExtra("CAMINHAO_PLACA")
-        val caminhaoModelo = intent.getStringExtra("CAMINHAO_MODELO") // Recebe o modelo
+        val caminhaoModelo = intent.getStringExtra("CAMINHAO_MODELO")
 
         binding.truckPlateTextView.text = caminhaoPlaca
-        binding.truckModelTextView.text = caminhaoModelo // Exibe o modelo
+        binding.truckModelTextView.text = caminhaoModelo
         binding.routeNameTextView.text = rotaNome
         binding.routeObservationsTextView.text = rotaObservacoes
 
@@ -122,53 +120,30 @@ class ConfirmSelectionActivity : AppCompatActivity() {
     }
 
     private fun startAppFlow() {
-        startLocationService()
-        lifecycleScope.launch {
-            try {
-                val trajeto = Trajeto(
-                    rotaId = rotaId,
-                    caminhaoId = caminhaoId,
-                    motoristaId = motorista.id
-                )
+        val trajeto = Trajeto(
+            rotaId = rotaId,
+            caminhaoId = caminhaoId,
+            motoristaId = motorista.id
+        )
 
-                val response = RetrovitClient.api.registrarTrajeto(trajeto)
-                if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body != null) {
-                        val id = body.id
-                        val rotaIdRetornado = body.rotaId
-                        val dataInicio = body.dataInicio
-                        val status = body.status
+        val localTrajetoId = System.currentTimeMillis().toInt()
+        trajetoRepository.startTrajeto(trajeto, localTrajetoId)
 
-                        rota_id_back = rotaIdRetornado
+        startLocationService(localTrajetoId)
 
-                        Toast.makeText(this@ConfirmSelectionActivity, "Trajeto enviado com sucesso!", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Trajeto iniciado. Sincronizando em segundo plano.", Toast.LENGTH_LONG).show()
 
-                        val intent = Intent(this@ConfirmSelectionActivity, RouteInProgressActivity::class.java).apply {
-                            putExtra("TRAJETO_ID", id)
-                            putExtra("ROTA_ID", rotaId)
-                        }
-                        startActivity(intent)
-                    }
-                } else {
-                    Toast.makeText(this@ConfirmSelectionActivity, "Falha ao enviar: ${response.code()}", Toast.LENGTH_LONG).show()
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Toast.makeText(this@ConfirmSelectionActivity, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
-            }
-        }
         val intent = Intent(this, RouteInProgressActivity::class.java).apply {
-            putExtra("ROTA_ID",rotaId)
+            putExtra("TRAJETO_ID", localTrajetoId)
         }
         startActivity(intent)
+        finish()
     }
 
-    private fun startLocationService() {
+    private fun startLocationService(trajetoId: Int) {
         val intent = Intent(this, LocationService::class.java).apply {
-            putExtra("ROTA_ID",rotaId)
+            putExtra("ROTA_ID", trajetoId)
         }
-
         ContextCompat.startForegroundService(this, intent)
     }
 }

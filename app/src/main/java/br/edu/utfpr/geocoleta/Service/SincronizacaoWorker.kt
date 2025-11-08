@@ -9,7 +9,7 @@ class SincronizacaoWorker(
     params: WorkerParameters
 ) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
-        SincronizacaoRepository(applicationContext).sincronizarPontos()
+        SincronizacaoRepository(applicationContext).sincronizarTudo()
         return Result.success()
     }
 }

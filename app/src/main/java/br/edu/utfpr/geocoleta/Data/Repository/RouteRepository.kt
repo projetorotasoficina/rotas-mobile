@@ -2,12 +2,15 @@ package br.edu.utfpr.geocoleta.Data.Repository
 
 import android.content.ContentValues
 import android.content.Context
+import android.net.ConnectivityManager
+import android.util.Log
 import br.edu.utfpr.geocoleta.Data.DatabaseContract
 import br.edu.utfpr.geocoleta.Data.DatabaseHelper
 import br.edu.utfpr.geocoleta.Data.Models.Route
 import br.edu.utfpr.geocoleta.Data.Network.RetrovitClient
+import java.net.UnknownHostException
 
-class RouteRepository(context: Context) {
+class RouteRepository(private val context: Context) {
     private val dbHelper = DatabaseHelper(context)
     private val apiService = RetrovitClient.api
 
@@ -104,7 +107,29 @@ class RouteRepository(context: Context) {
         return lista
     }
 
-    suspend fun getRoutes(){
-        apiService.getRotas().forEach { insert(it) }
+    suspend fun getRoutes() {
+        if (isNetworkAvailable()) {
+            try {
+                apiService.getRotas().forEach { insert(it) }
+            } catch (e: UnknownHostException) {
+                Log.e("RouteRepository", "Falha ao buscar rotas: " + e.message)
+            } catch (e: Exception) {
+                Log.e("RouteRepository", "Erro inesperado ao buscar rotas: " + e.message)
+            }
+        } else {
+            Log.d("RouteRepository", "Sem conexão de rede. Usando dados locais.")
+        }
+    }
+
+    suspend fun syncRoutes() {
+        if (isNetworkAvailable()) {
+            getRoutes()
+        }
+    }
+
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetworkInfo = connectivityManager.activeNetworkInfo
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected
     }
 }

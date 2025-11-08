@@ -5,12 +5,13 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.provider.Settings
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import br.edu.utfpr.geocoleta.Data.Models.ActivationRequest
-import br.edu.utfpr.geocoleta.Data.Network.ApiService
 import br.edu.utfpr.geocoleta.Data.Network.RetrovitClient
 import br.edu.utfpr.geocoleta.databinding.ActivityInitialSetupBinding
 import kotlinx.coroutines.launch
@@ -25,11 +26,31 @@ class InitialSetupActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+        // Verifica se o dispositivo já está ativado
+        if (sharedPreferences.getBoolean(ACTIVATED_KEY, false)) {
+            navigateToMain()
+            return // Impede a execução do restante do onCreate
+        }
+
         binding = ActivityInitialSetupBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         RetrovitClient.initialize(this)
-        sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+        binding.etToken.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (s?.isNotEmpty() == true) {
+                    hideError()
+                }
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
 
         binding.btnAvancar.setOnClickListener {
             val token = binding.etToken.text.toString().trim()
@@ -52,7 +73,9 @@ class InitialSetupActivity : AppCompatActivity() {
                 saveActivation(response.appToken)
                 navigateToMain()
             } catch (e: Exception) {
-                showError("Token de ativação inválido")
+                Log.e("InitialSetupActivity", "Activation failed", e)
+                showError("Token de ativação inválido. Verifique o token e tente novamente.")
+            } finally {
                 showLoading(false)
             }
         }
@@ -77,7 +100,12 @@ class InitialSetupActivity : AppCompatActivity() {
         binding.tvTokenError.visibility = View.VISIBLE
     }
 
+    private fun hideError() {
+        binding.tvTokenError.visibility = View.GONE
+    }
+
     private fun showLoading(isLoading: Boolean) {
         binding.loadingLayout.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.btnAvancar.isEnabled = !isLoading
     }
 }

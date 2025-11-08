@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="@dimen/margin_sm"
@@ -16,18 +17,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="@dimen/padding_md"
-        android:gravity="center_vertical">
+        android:padding="@dimen/padding_md">
 
-        <!-- Header do caminhão -->
+        <!-- Header: Placa e Status -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="@dimen/spacing_sm">
+            android:layout_marginBottom="@dimen/spacing_xs">
 
-            <!-- Ícone do caminhão -->
             <ImageView
                 android:id="@+id/ivIcon"
                 android:layout_width="24dp"
@@ -36,22 +35,20 @@
                 android:layout_marginEnd="@dimen/spacing_sm"
                 android:contentDescription="Ícone do caminhão" />
 
-            <!-- Placa do caminhão -->
             <TextView
                 android:id="@+id/tvPlaca"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="ACB-0000"
+                tools:text="GRT-0102"
                 android:textAppearance="@style/TextAppearance.Subtitle"
                 android:textColor="@color/foreground" />
 
-            <!-- Badge de disponibilidade -->
             <TextView
                 android:id="@+id/tvStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="DISPONÍVEL"
+                tools:text="DISPONÍVEL"
                 android:textAppearance="@style/TextAppearance.Caption"
                 android:textColor="@color/success"
                 android:textStyle="bold"
@@ -61,30 +58,57 @@
 
         </LinearLayout>
 
-        <!-- Descrição do caminhão -->
+        <!-- Modelo/Descrição -->
         <TextView
             android:id="@+id/tvDescricao"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Caminhão Volvo, azul"
+            tools:text="Caminhão Volvo, azul"
             android:textAppearance="@style/TextAppearance.Body"
             android:textColor="@color/muted_foreground"
-            android:layout_marginBottom="@dimen/spacing_sm" />
+            android:layout_marginStart="32dp" />
 
-        <!-- Informações técnicas -->
+        <!-- Detalhes Adicionais (invisíveis por padrão) -->
         <LinearLayout
+            android:id="@+id/llDetalhesColeta"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:orientation="vertical"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:visibility="gone" 
+            tools:visibility="visible">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Modelo 2020"
-                android:textAppearance="@style/TextAppearance.Caption"
-                android:textColor="@color/primary"
-                android:textStyle="bold" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvTipoColeta"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="Coleta Seletiva"
+                    android:textAppearance="@style/TextAppearance.Body"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_marginTop="@dimen/spacing_xs"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvTipoResiduo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="Reciclável"
+                    android:textAppearance="@style/TextAppearance.Body"/>
+
+            </LinearLayout>
 
         </LinearLayout>
 
