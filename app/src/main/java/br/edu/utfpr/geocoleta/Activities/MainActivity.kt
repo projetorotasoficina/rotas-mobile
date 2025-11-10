@@ -1,12 +1,19 @@
 package br.edu.utfpr.geocoleta.Activities
 
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkRequest
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
@@ -14,6 +21,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import br.edu.utfpr.geocoleta.Data.Models.Trucker
 import br.edu.utfpr.geocoleta.Data.Repository.RouteRepository
 import br.edu.utfpr.geocoleta.Data.Repository.TruckRepository
 import br.edu.utfpr.geocoleta.Data.Repository.TruckerRepository
@@ -39,6 +47,10 @@ class MainActivity : AppCompatActivity() {
     private val PREFS_NAME = "GeoColetaPrefs"
     private val CPF_KEY = "cpf_key"
     private val REMEMBER_CPF_KEY = "remember_cpf_key"
+    private val FIRST_RUN_KEY = "first_run"
+
+    private lateinit var connectivityManager: ConnectivityManager
+    private lateinit var networkCallback: ConnectivityManager.NetworkCallback
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,7 +60,24 @@ class MainActivity : AppCompatActivity() {
         setupListeners()
         loadSavedCpf()
         setupCpfMask()
-        syncData()
+        setupNetworkCallback()
+
+        val isFirstRun = sharedPreferences.getBoolean(FIRST_RUN_KEY, true)
+        if (isFirstRun) {
+            syncData()
+            sharedPreferences.edit().putBoolean(FIRST_RUN_KEY, false).apply()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val networkRequest = NetworkRequest.Builder().build()
+        connectivityManager.registerNetworkCallback(networkRequest, networkCallback)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        connectivityManager.unregisterNetworkCallback(networkCallback)
     }
 
     private fun setupViews() {
@@ -63,6 +92,7 @@ class MainActivity : AppCompatActivity() {
         repositoryTruck = TruckRepository(this)
         repositoryRoute = RouteRepository(this)
         sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     }
 
     private fun syncData() {
@@ -73,10 +103,10 @@ class MainActivity : AppCompatActivity() {
                 repositoryTruck.getTrucks()
                 repositoryRoute.getRoutes()
             } catch (e: UnknownHostException) {
-                Toast.makeText(this@MainActivity, "Falha na conexão. Verifique sua internet.", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@MainActivity, "Falha na conexão. Usando dados locais.", Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
-                Toast.makeText(this@MainActivity, "Ocorreu um erro inesperado.", Toast.LENGTH_LONG).show()
-                e.printStackTrace()
+                Log.e("MainActivity", "An unexpected error occurred", e)
+                Toast.makeText(this@MainActivity, "Ocorreu um erro inesperado. Tente novamente mais tarde.", Toast.LENGTH_LONG).show()
             } finally {
                 showLoading(false)
             }
@@ -85,11 +115,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupListeners() {
         btnEntrar.setOnClickListener {
-            if (validarEProsseguir()) {
-                val intent = Intent(this, SelectTruckActivity::class.java)
-                intent.putExtra("cpf", etCpf.text.toString())
-                startActivity(intent)
-            }
+            validateAndConfirm()
         }
 
         etCpf.addTextChangedListener(object : TextWatcher {
@@ -101,25 +127,62 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    private fun validarEProsseguir(): Boolean {
+    private fun validateAndConfirm() {
         val cpfDigitado = etCpf.text.toString().trim()
         val cpfNumeros = cpfDigitado.replace("[^\\d]".toRegex(), "")
 
         if (cpfDigitado.isEmpty()) {
             showCpfError("O campo CPF não pode estar vazio.")
-            return false
+            return
         }
-        if (cpfNumeros.length != 11 || !isCpfValido(cpfNumeros)) {
+        if (cpfNumeros.length != 11) {
+            showCpfError("O CPF deve conter 11 dígitos.")
+            return
+        }
+        if (!isCpfValido(cpfNumeros)) {
             showCpfError("Digite um CPF válido.")
-            return false
+            return
         }
-        val sharedCpf = getSharedPreferences("UserSession", Context.MODE_PRIVATE)
-        sharedCpf.edit()
-            .putString("cpf_usuario", etCpf.text.toString())
-            .apply()
 
-        saveCpfPreference()
-        return true
+        val trucker = repositoryTrucker.findByCpf(cpfNumeros)
+        if (trucker != null) {
+            showConfirmationDialog(trucker)
+        } else {
+            showCpfError("Motorista não encontrado.")
+        }
+    }
+
+    private fun showConfirmationDialog(trucker: Trucker) {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_confirm_identity, null)
+        val tvTruckerName = dialogView.findViewById<TextView>(R.id.tvTruckerName)
+        val btnCancel = dialogView.findViewById<Button>(R.id.btnCancel)
+        val btnConfirm = dialogView.findViewById<Button>(R.id.btnConfirm)
+
+        tvTruckerName.text = trucker.nome
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        btnConfirm.setOnClickListener {
+            dialog.dismiss()
+            saveCpfPreference()
+
+            val sharedCpf = getSharedPreferences("UserSession", Context.MODE_PRIVATE)
+            sharedCpf.edit()
+                .putString("cpf_usuario", etCpf.text.toString())
+                .apply()
+
+            val intent = Intent(this, SelectTruckActivity::class.java)
+            intent.putExtra("cpf", etCpf.text.toString())
+            startActivity(intent)
+        }
+
+        dialog.show()
     }
 
     private fun showCpfError(message: String) {
@@ -219,5 +282,27 @@ class MainActivity : AppCompatActivity() {
 
     private fun showLoading(show: Boolean) {
         loadingLayout.visibility = if (show) View.VISIBLE else View.GONE
+        btnEntrar.isEnabled = !show
+    }
+
+    private fun setupNetworkCallback() {
+        networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "Conexão reestabelecida. Sincronizando dados.", Toast.LENGTH_SHORT).show()
+                    lifecycleScope.launch {
+                        repositoryRoute.syncRoutes()
+                    }
+                }
+            }
+
+            override fun onLost(network: Network) {
+                super.onLost(network)
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "Sem conexão. Seus dados serão enviados quando a internet voltar.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 }

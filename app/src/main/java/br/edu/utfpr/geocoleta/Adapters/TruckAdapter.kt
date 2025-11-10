@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
@@ -26,6 +27,8 @@ class TruckAdapter(
         val ivIcon: ImageView = itemView.findViewById(R.id.ivIcon)
         val tvStatus: TextView = itemView.findViewById(R.id.tvStatus)
         val card: CardView = itemView as CardView
+        // val tvTipoColeta: TextView = itemView.findViewById(R.id.tvTipoColeta) // Descomentar quando a API estiver pronta
+        // val tvTipoResiduo: TextView = itemView.findViewById(R.id.tvTipoResiduo) // Descomentar quando a API estiver pronta
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TruckViewHolder {
@@ -37,21 +40,23 @@ class TruckAdapter(
     @SuppressLint("ClickableViewAccessibility")
     override fun onBindViewHolder(holder: TruckViewHolder, position: Int) {
         val truck = listaTrucks[position]
-        holder.tvPlaca.text = "PLACA ${truck.placa}"
+        holder.tvPlaca.text = truck.placa // Alterado: removido o "PLACA "
         holder.tvDescricao.text = truck.modelo
+
+        // Lógica para os novos campos (descomentar quando a API for atualizada)
+        // holder.tvTipoColeta.text = "Tipo de Coleta: ${truck.tipoColeta}" 
+        // holder.tvTipoResiduo.text = "Tipo de Resíduo: ${truck.tipoResiduo}"
 
         if (truck.ativo) {
             holder.tvStatus.text = "DISPONÍVEL"
             holder.tvStatus.setTextColor(ContextCompat.getColor(holder.itemView.context, android.R.color.white))
             holder.tvStatus.setBackgroundResource(R.drawable.badge_success)
             holder.itemView.alpha = 1.0f
-            holder.itemView.isClickable = true
         } else {
             holder.tvStatus.text = "INDISPONÍVEL"
             holder.tvStatus.setTextColor(ContextCompat.getColor(holder.itemView.context, android.R.color.white))
             holder.tvStatus.setBackgroundResource(R.drawable.badge_error)
             holder.itemView.alpha = 0.5f
-            holder.itemView.isClickable = false
         }
 
         if (position == selectedPosition) {
@@ -69,6 +74,8 @@ class TruckAdapter(
                 notifyItemChanged(previousPosition)
                 notifyItemChanged(selectedPosition)
                 onItemClick(truck)
+            } else {
+                Toast.makeText(holder.itemView.context, "Este caminhão não está disponível.", Toast.LENGTH_SHORT).show()
             }
         }
     }

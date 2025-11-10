@@ -10,7 +10,6 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import br.edu.utfpr.geocoleta.Data.Models.Coordinates
-import br.edu.utfpr.geocoleta.Data.Repository.CoordinatesRepository
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -26,13 +25,13 @@ class LocationService : Service() {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
-    private lateinit var coordinatesRepository: CoordinatesRepository
+    private lateinit var sincronizacaoRepository: SincronizacaoRepository
     private var rotaId: Int = 0
 
     override fun onCreate() {
         super.onCreate()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        coordinatesRepository = CoordinatesRepository(this)
+        sincronizacaoRepository = SincronizacaoRepository(this)
         createNotificationChannel()
 
         val notification: Notification = NotificationCompat.Builder(this, "location_channel")
@@ -66,8 +65,8 @@ class LocationService : Service() {
                     dateFormat.timeZone = TimeZone.getTimeZone("UTC")
                     val dateString = dateFormat.format(date)
 
-                    val coordenada = Coordinates( 0,rotaId, location.latitude, location.longitude, dateString, "")
-                    coordinatesRepository.insert(coordenada)
+                    val coordinates = Coordinates( 0,rotaId, location.latitude, location.longitude, dateString, "")
+                    sincronizacaoRepository.inserirPonto(coordinates)
                 }
             }
         }
