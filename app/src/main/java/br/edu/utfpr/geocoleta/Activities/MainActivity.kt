@@ -7,10 +7,8 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
-import android.widget.EditText
-import android.widget.FrameLayout
-import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -18,22 +16,16 @@ import br.edu.utfpr.geocoleta.Data.Repository.RouteRepository
 import br.edu.utfpr.geocoleta.Data.Repository.TruckRepository
 import br.edu.utfpr.geocoleta.Data.Repository.TruckerRepository
 import br.edu.utfpr.geocoleta.R
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.checkbox.MaterialCheckBox
+import br.edu.utfpr.geocoleta.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
 import java.net.UnknownHostException
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityMainBinding
     private lateinit var repositoryTrucker: TruckerRepository
     private lateinit var repositoryTruck: TruckRepository
     private lateinit var repositoryRoute: RouteRepository
-    private lateinit var loadingLayout: FrameLayout
-
-    private lateinit var etCpf: EditText
-    private lateinit var tvErroCpf: TextView
-    private lateinit var tvCpfLabel: TextView
-    private lateinit var btnEntrar: MaterialButton
-    private lateinit var cbLembrarCpf: MaterialCheckBox
 
     private lateinit var sharedPreferences: SharedPreferences
     private val PREFS_NAME = "GeoColetaPrefs"
@@ -42,7 +34,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         setupViews()
         setupListeners()
@@ -52,13 +45,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupViews() {
-        loadingLayout = findViewById(R.id.loadingLayout)
-        etCpf = findViewById(R.id.etCpf)
-        tvErroCpf = findViewById(R.id.tvErroCpf)
-        tvCpfLabel = findViewById(R.id.tvCpfLabel)
-        btnEntrar = findViewById(R.id.btnEntrar)
-        cbLembrarCpf = findViewById(R.id.cbLembrarCpf)
-
         repositoryTrucker = TruckerRepository(this)
         repositoryTruck = TruckRepository(this)
         repositoryRoute = RouteRepository(this)
@@ -68,6 +54,8 @@ class MainActivity : AppCompatActivity() {
     private fun syncData() {
         lifecycleScope.launch {
             showLoading(true)
+            binding.etCpf.isEnabled = false
+            binding.btnEntrar.isEnabled = false
             try {
                 repositoryTrucker.getTruckers()
                 repositoryTruck.getTrucks()
@@ -79,20 +67,18 @@ class MainActivity : AppCompatActivity() {
                 e.printStackTrace()
             } finally {
                 showLoading(false)
+                binding.etCpf.isEnabled = true
+                binding.btnEntrar.isEnabled = true
             }
         }
     }
 
     private fun setupListeners() {
-        btnEntrar.setOnClickListener {
-            if (validarEProsseguir()) {
-                val intent = Intent(this, SelectTruckActivity::class.java)
-                intent.putExtra("cpf", etCpf.text.toString())
-                startActivity(intent)
-            }
+        binding.btnEntrar.setOnClickListener {
+            validarEProsseguir()
         }
 
-        etCpf.addTextChangedListener(object : TextWatcher {
+        binding.etCpf.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 resetCpfErrorState()
@@ -101,42 +87,61 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    private fun validarEProsseguir(): Boolean {
-        val cpfDigitado = etCpf.text.toString().trim()
+    private fun validarEProsseguir() {
+        val cpfDigitado = binding.etCpf.text.toString().trim()
         val cpfNumeros = cpfDigitado.replace("[^\\d]".toRegex(), "")
 
         if (cpfDigitado.isEmpty()) {
             showCpfError("O campo CPF não pode estar vazio.")
-            return false
+            return
         }
-        if (cpfNumeros.length != 11 || !isCpfValido(cpfNumeros)) {
+        if (!isCpfValido(cpfNumeros)) {
             showCpfError("Digite um CPF válido.")
-            return false
+            return
         }
-        val sharedCpf = getSharedPreferences("UserSession", Context.MODE_PRIVATE)
-        sharedCpf.edit()
-            .putString("cpf_usuario", etCpf.text.toString())
-            .apply()
 
-        saveCpfPreference()
-        return true
+        lifecycleScope.launch {
+            showLoading(true)
+            val motorista = repositoryTrucker.findByCpf(cpfNumeros)
+            showLoading(false)
+
+            if (motorista != null) {
+                showConfirmationDialog(motorista.nome, cpfDigitado)
+            } else {
+                showCpfError("Motorista não encontrado.")
+            }
+        }
+    }
+
+    private fun showConfirmationDialog(nomeMotorista: String, cpf: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Confirmar Identidade")
+            .setMessage("Você é $nomeMotorista?")
+            .setPositiveButton("Sim, sou eu") { _, _ ->
+                saveCpfPreference(cpf)
+                val intent = Intent(this, SelectTruckActivity::class.java)
+                intent.putExtra("cpf", cpf)
+                startActivity(intent)
+            }
+            .setNegativeButton("Não sou eu", null)
+            .show()
     }
 
     private fun showCpfError(message: String) {
-        tvErroCpf.text = message
-        tvErroCpf.visibility = View.VISIBLE
-        etCpf.setBackgroundResource(R.drawable.input_error_background)
-        tvCpfLabel.setTextColor(ContextCompat.getColor(this, R.color.destructive))
+        binding.tvErroCpf.text = message
+        binding.tvErroCpf.visibility = View.VISIBLE
+        binding.etCpf.setBackgroundResource(R.drawable.input_error_background)
+        binding.tvCpfLabel.setTextColor(ContextCompat.getColor(this, R.color.destructive))
     }
 
     private fun resetCpfErrorState() {
-        tvErroCpf.visibility = View.GONE
-        etCpf.setBackgroundResource(R.drawable.input_background)
-        tvCpfLabel.setTextColor(ContextCompat.getColor(this, R.color.foreground))
+        binding.tvErroCpf.visibility = View.GONE
+        binding.etCpf.setBackgroundResource(R.drawable.input_background)
+        binding.tvCpfLabel.setTextColor(ContextCompat.getColor(this, R.color.foreground))
     }
 
     private fun isCpfValido(cpf: String): Boolean {
-        if (cpf.all { it == cpf[0] }) return false
+        if (cpf.length != 11 || cpf.all { it == cpf[0] }) return false
 
         try {
             val dv1 = calcularDv(cpf.substring(0, 9), 10)
@@ -158,21 +163,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupCpfMask() {
-        etCpf.addTextChangedListener(object : TextWatcher {
+        binding.etCpf.addTextChangedListener(object : TextWatcher {
             private var isUpdating = false
             private val mask = "###.###.###-##"
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                val str = s.toString().replace("[^\\d]".toRegex(), "")
-                var cpf = ""
-
                 if (isUpdating) {
                     isUpdating = false
                     return
                 }
 
+                val str = s.toString().replace("[^\\d]".toRegex(), "")
+                var cpf = ""
                 var i = 0
                 for (m in mask.toCharArray()) {
                     if (m != '#' && str.length > i) {
@@ -188,36 +192,38 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 isUpdating = true
-                etCpf.setText(cpf)
-                etCpf.setSelection(cpf.length)
-                resetCpfErrorState()
+                binding.etCpf.setText(cpf)
+                binding.etCpf.setSelection(cpf.length)
             }
 
             override fun afterTextChanged(s: Editable?) {}
         })
     }
 
-    private fun saveCpfPreference() {
+    private fun saveCpfPreference(cpf: String) {
         val editor = sharedPreferences.edit()
-        if (cbLembrarCpf.isChecked) {
-            editor.putString(CPF_KEY, etCpf.text.toString())
+        if (binding.cbLembrarCpf.isChecked) {
+            editor.putString(CPF_KEY, cpf)
             editor.putBoolean(REMEMBER_CPF_KEY, true)
         } else {
             editor.remove(CPF_KEY)
             editor.remove(REMEMBER_CPF_KEY)
         }
         editor.apply()
+
+        val userSessionPrefs = getSharedPreferences("UserSession", Context.MODE_PRIVATE)
+        userSessionPrefs.edit().putString("cpf_usuario", cpf).apply()
     }
 
     private fun loadSavedCpf() {
         val remember = sharedPreferences.getBoolean(REMEMBER_CPF_KEY, false)
-        cbLembrarCpf.isChecked = remember
+        binding.cbLembrarCpf.isChecked = remember
         if (remember) {
-            etCpf.setText(sharedPreferences.getString(CPF_KEY, ""))
+            binding.etCpf.setText(sharedPreferences.getString(CPF_KEY, ""))
         }
     }
 
     private fun showLoading(show: Boolean) {
-        loadingLayout.visibility = if (show) View.VISIBLE else View.GONE
+        binding.loadingLayout.visibility = if (show) View.VISIBLE else View.GONE
     }
 }
