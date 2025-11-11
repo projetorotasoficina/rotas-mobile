@@ -149,6 +149,7 @@ class SelectTruckActivity : AppCompatActivity() {
                 putExtra("placa", truck.placa)
                 putExtra("descricao", truck.modelo)
                 putExtra("truck_id", truck.id)
+                putExtra("residueType", truck.tipoResiduo)
             }
             startActivity(intent)
 
