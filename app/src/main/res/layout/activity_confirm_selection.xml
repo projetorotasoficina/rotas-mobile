@@ -36,7 +36,7 @@
     </RelativeLayout>
 
     <androidx.cardview.widget.CardView
-        android:id="@+id/truckCard"
+        android:id="@+id/driverCard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="@dimen/spacing_lg"
@@ -46,8 +46,58 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_chainStyle="packed"
-        app:layout_constraintBottom_toTopOf="@id/routeCard"
+        app:layout_constraintBottom_toTopOf="@id/truckCard"
         android:layout_marginTop="@dimen/spacing_lg">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="@dimen/padding_lg"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_person"
+                app:tint="@color/primary_blue"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginStart="@dimen/spacing_md">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Motorista"
+                    android:textAppearance="@style/TextAppearance.Subtitle"
+                    android:textColor="@color/foreground"/>
+
+                <TextView
+                    android:id="@+id/driverNameTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="João da Silva"
+                    android:textAppearance="@style/TextAppearance.Body"
+                    android:textColor="@color/muted_foreground"/>
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/truckCard"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/spacing_lg"
+        app:cardCornerRadius="@dimen/radius_lg"
+        app:cardElevation="@dimen/elevation_sm"
+        app:layout_constraintTop_toBottomOf="@id/driverCard"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/routeCard"
+        android:layout_marginTop="@dimen/spacing_md">
 
         <LinearLayout
             android:layout_width="match_parent"
