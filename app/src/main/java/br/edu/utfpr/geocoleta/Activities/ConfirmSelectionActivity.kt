@@ -43,6 +43,7 @@ class ConfirmSelectionActivity : AppCompatActivity() {
                 handlePostPermissionCheck()
             } else {
                 Toast.makeText(this, "As permissões de localização são necessárias para iniciar a rota.", Toast.LENGTH_LONG).show()
+                binding.startRouteButton.isEnabled = true // Re-enable button if permissions are denied
             }
         }
 
@@ -88,6 +89,7 @@ class ConfirmSelectionActivity : AppCompatActivity() {
         }
 
         binding.startRouteButton.setOnClickListener {
+            binding.startRouteButton.isEnabled = false // Disable button on click
             checkPermissions()
         }
     }
