@@ -20,6 +20,7 @@ import br.edu.utfpr.geocoleta.R
 import br.edu.utfpr.geocoleta.Service.LocationService
 import br.edu.utfpr.geocoleta.databinding.ActivityConfirmSelectionBinding
 import kotlinx.coroutines.launch
+import java.net.UnknownHostException
 
 class ConfirmSelectionActivity : AppCompatActivity() {
 
@@ -29,7 +30,6 @@ class ConfirmSelectionActivity : AppCompatActivity() {
     private var rotaId: Int = 0
     private var caminhaoId: Int = 0
     private lateinit var motorista: Trucker
-    private var rota_id_back : Int = 0
 
     private val locationPermissions = arrayOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -41,6 +41,8 @@ class ConfirmSelectionActivity : AppCompatActivity() {
             val allGranted = permissions.entries.all { it.value }
             if (allGranted) {
                 handlePostPermissionCheck()
+            } else {
+                Toast.makeText(this, "As permissões de localização são necessárias para iniciar a rota.", Toast.LENGTH_LONG).show()
             }
         }
 
@@ -64,22 +66,20 @@ class ConfirmSelectionActivity : AppCompatActivity() {
             finish()
             return
         }
-
-
+        motorista = motoristaEncontrado
 
         ivBack = findViewById(R.id.ivBack)
 
         rotaId = intent.getIntExtra("ROTA_ID", 0)
         caminhaoId = intent.getIntExtra("CAMINHAO_ID", 0)
-        motorista = repositoryTrucker.findByCpf(cpf!!)!!
 
         val rotaNome = intent.getStringExtra("ROTA_NOME")
         val rotaObservacoes = intent.getStringExtra("ROTA_OBSERVACOES")
         val caminhaoPlaca = intent.getStringExtra("CAMINHAO_PLACA")
-        val caminhaoModelo = intent.getStringExtra("CAMINHAO_MODELO") // Recebe o modelo
+        val caminhaoModelo = intent.getStringExtra("CAMINHAO_MODELO")
 
         binding.truckPlateTextView.text = caminhaoPlaca
-        binding.truckModelTextView.text = caminhaoModelo // Exibe o modelo
+        binding.truckModelTextView.text = caminhaoModelo
         binding.routeNameTextView.text = rotaNome
         binding.routeObservationsTextView.text = rotaObservacoes
 
@@ -123,6 +123,7 @@ class ConfirmSelectionActivity : AppCompatActivity() {
 
     private fun startAppFlow() {
         startLocationService()
+
         lifecycleScope.launch {
             try {
                 val trajeto = Trajeto(
@@ -132,43 +133,29 @@ class ConfirmSelectionActivity : AppCompatActivity() {
                 )
 
                 val response = RetrovitClient.api.registrarTrajeto(trajeto)
-                if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body != null) {
-                        val id = body.id
-                        val rotaIdRetornado = body.rotaId
-                        val dataInicio = body.dataInicio
-                        val status = body.status
-
-                        rota_id_back = rotaIdRetornado
-
-                        Toast.makeText(this@ConfirmSelectionActivity, "Trajeto enviado com sucesso!", Toast.LENGTH_SHORT).show()
-
-                        val intent = Intent(this@ConfirmSelectionActivity, RouteInProgressActivity::class.java).apply {
-                            putExtra("TRAJETO_ID", id)
-                            putExtra("ROTA_ID", rotaId)
-                        }
-                        startActivity(intent)
-                    }
-                } else {
-                    Toast.makeText(this@ConfirmSelectionActivity, "Falha ao enviar: ${response.code()}", Toast.LENGTH_LONG).show()
+                if (!response.isSuccessful) {
+                    Toast.makeText(this@ConfirmSelectionActivity, "Falha ao registrar trajeto. Tentando novamente em segundo plano.", Toast.LENGTH_LONG).show()
                 }
+
+            } catch (e: UnknownHostException) {
+                Toast.makeText(this@ConfirmSelectionActivity, "Sem conexão. Seus dados serão enviados quando a internet voltar.", Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
                 e.printStackTrace()
-                Toast.makeText(this@ConfirmSelectionActivity, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@ConfirmSelectionActivity, "Erro ao iniciar trajeto. Tentando novamente em segundo plano.", Toast.LENGTH_LONG).show()
             }
         }
+
         val intent = Intent(this, RouteInProgressActivity::class.java).apply {
-            putExtra("ROTA_ID",rotaId)
+            putExtra("ROTA_ID", rotaId)
         }
         startActivity(intent)
+        finish() // Finaliza a tela de confirmação para não voltar a ela
     }
 
     private fun startLocationService() {
         val intent = Intent(this, LocationService::class.java).apply {
-            putExtra("ROTA_ID",rotaId)
+            putExtra("ROTA_ID", rotaId)
         }
-
         ContextCompat.startForegroundService(this, intent)
     }
 }
