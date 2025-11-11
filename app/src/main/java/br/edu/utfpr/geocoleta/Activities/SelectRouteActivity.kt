@@ -34,10 +34,13 @@ class SelectRouteActivity : AppCompatActivity() {
     private lateinit var listaRotas: List<Route>
 
     private var selectedRoute: Route? = null
+    private var truckResidueType: Int = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_select_route)
+
+        truckResidueType = intent.getIntExtra("residueType", -1)
 
         initializeViews()
         setupListeners()
@@ -100,11 +103,13 @@ class SelectRouteActivity : AppCompatActivity() {
                 }
 
                 withContext(Dispatchers.Main) {
-                    listaRotas = routes
-                    if (routes.isNotEmpty()) {
-                        setupRecyclerViewWithData(routes)
+                    val filteredRoutes = routes.filter { it.tipoResiduo == truckResidueType }
+                    listaRotas = filteredRoutes
+                    if (filteredRoutes.isNotEmpty()) {
+                        setupRecyclerViewWithData(filteredRoutes)
                         tvEmptyState.visibility = View.GONE
                     } else {
+                        tvEmptyState.text = "Nenhuma rota encontrada para o tipo de resíduo do caminhão."
                         tvEmptyState.visibility = View.VISIBLE
                     }
                     showLoading(false)
@@ -114,6 +119,7 @@ class SelectRouteActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     showLoading(false)
                     tvEmptyState.visibility = View.VISIBLE
+                    Toast.makeText(this@SelectRouteActivity, "Erro ao carregar rotas.", Toast.LENGTH_SHORT).show()
                 }
                 e.printStackTrace()
             }

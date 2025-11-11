@@ -82,6 +82,7 @@ class ConfirmSelectionActivity : AppCompatActivity() {
         binding.truckModelTextView.text = caminhaoModelo // Exibe o modelo
         binding.routeNameTextView.text = rotaNome
         binding.routeObservationsTextView.text = rotaObservacoes
+        binding.driverNameTextView.text = motorista.nome
 
         ivBack.setOnClickListener {
             finish()
