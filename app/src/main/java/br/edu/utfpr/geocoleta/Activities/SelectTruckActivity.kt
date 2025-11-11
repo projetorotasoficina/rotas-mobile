@@ -79,6 +79,7 @@ class SelectTruckActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     showLoading(false)
                     tvEmptyState.visibility = View.VISIBLE
+                    Toast.makeText(this@SelectTruckActivity, "Erro ao carregar caminhões.", Toast.LENGTH_SHORT).show()
                 }
                 e.printStackTrace()
             }

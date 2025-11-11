@@ -114,6 +114,7 @@ class SelectRouteActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     showLoading(false)
                     tvEmptyState.visibility = View.VISIBLE
+                    Toast.makeText(this@SelectRouteActivity, "Erro ao carregar rotas.", Toast.LENGTH_SHORT).show()
                 }
                 e.printStackTrace()
             }

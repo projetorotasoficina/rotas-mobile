@@ -122,8 +122,16 @@ class ConfirmSelectionActivity : AppCompatActivity() {
     }
 
     private fun startAppFlow() {
+        // Inicia o fluxo principal imediatamente para não bloquear o usuário
         startLocationService()
+        val intent = Intent(this, RouteInProgressActivity::class.java).apply {
+            putExtra("ROTA_ID", rotaId)
+        }
+        startActivity(intent)
+        finish()
 
+        // Tenta registrar o trajeto na rede em segundo plano
+        // O usuário já está na próxima tela, apenas um Toast informativo será exibido.
         lifecycleScope.launch {
             try {
                 val trajeto = Trajeto(
@@ -133,23 +141,23 @@ class ConfirmSelectionActivity : AppCompatActivity() {
                 )
 
                 val response = RetrovitClient.api.registrarTrajeto(trajeto)
-                if (!response.isSuccessful) {
-                    Toast.makeText(this@ConfirmSelectionActivity, "Falha ao registrar trajeto. Tentando novamente em segundo plano.", Toast.LENGTH_LONG).show()
+                if (response.isSuccessful) {
+                    // Feedback positivo quando online
+                    Toast.makeText(applicationContext, "Trajeto iniciado e sincronizado.", Toast.LENGTH_SHORT).show()
+                } else {
+                    // Feedback para erro de servidor (4xx, 5xx)
+                    Toast.makeText(applicationContext, "Falha na sincronização (Cód: ${response.code()}). O envio será feito em segundo plano.", Toast.LENGTH_LONG).show()
                 }
 
             } catch (e: UnknownHostException) {
-                Toast.makeText(this@ConfirmSelectionActivity, "Sem conexão. Seus dados serão enviados quando a internet voltar.", Toast.LENGTH_LONG).show()
+                // Feedback específico para offline
+                Toast.makeText(applicationContext, "Sem conexão. A rota iniciou offline e será enviada depois.", Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
+                // Feedback para outros erros inesperados
                 e.printStackTrace()
-                Toast.makeText(this@ConfirmSelectionActivity, "Erro ao iniciar trajeto. Tentando novamente em segundo plano.", Toast.LENGTH_LONG).show()
+                Toast.makeText(applicationContext, "A rota iniciou offline. Ocorreu um erro ao sincronizar.", Toast.LENGTH_LONG).show()
             }
         }
-
-        val intent = Intent(this, RouteInProgressActivity::class.java).apply {
-            putExtra("ROTA_ID", rotaId)
-        }
-        startActivity(intent)
-        finish() // Finaliza a tela de confirmação para não voltar a ela
     }
 
     private fun startLocationService() {
