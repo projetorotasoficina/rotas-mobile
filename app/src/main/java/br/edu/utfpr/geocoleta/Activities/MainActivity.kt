@@ -106,7 +106,11 @@ class MainActivity : AppCompatActivity() {
             showLoading(false)
 
             if (motorista != null) {
-                showConfirmationDialog(motorista.nome, cpfDigitado)
+                if (motorista.ativo) {
+                    showConfirmationDialog(motorista.nome, cpfDigitado)
+                } else {
+                    showCpfError("Este usuário está inativo e não pode acessar o sistema.")
+                }
             } else {
                 showCpfError("Motorista não encontrado.")
             }
