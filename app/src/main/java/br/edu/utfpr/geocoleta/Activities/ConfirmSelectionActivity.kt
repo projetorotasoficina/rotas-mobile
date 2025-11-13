@@ -122,7 +122,6 @@ class ConfirmSelectionActivity : AppCompatActivity() {
     }
 
     private fun startAppFlow() {
-        startLocationService()
         lifecycleScope.launch {
             try {
                 val trajeto = Trajeto(
@@ -137,36 +136,51 @@ class ConfirmSelectionActivity : AppCompatActivity() {
                     if (body != null) {
                         val id = body.id
                         val rotaIdRetornado = body.rotaId
-                        val dataInicio = body.dataInicio
-                        val status = body.status
 
-                        rota_id_back = rotaIdRetornado
+                        rota_id_back = id
 
-                        Toast.makeText(this@ConfirmSelectionActivity, "Trajeto enviado com sucesso!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@ConfirmSelectionActivity,
+                            "Trajeto enviado com sucesso!",
+                            Toast.LENGTH_SHORT
+                        ).show()
 
-                        val intent = Intent(this@ConfirmSelectionActivity, RouteInProgressActivity::class.java).apply {
+                        val intent = Intent(
+                            this@ConfirmSelectionActivity,
+                            RouteInProgressActivity::class.java
+                        ).apply {
                             putExtra("TRAJETO_ID", id)
                             putExtra("ROTA_ID", rotaId)
                         }
+                        startLocationService()
                         startActivity(intent)
+
+                        return@launch
                     }
                 } else {
-                    Toast.makeText(this@ConfirmSelectionActivity, "Falha ao enviar: ${response.code()}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        this@ConfirmSelectionActivity,
+                        "Falha ao enviar: ${response.code()}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    return@launch
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                Toast.makeText(this@ConfirmSelectionActivity, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    this@ConfirmSelectionActivity,
+                    "Erro: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@launch
             }
         }
-        val intent = Intent(this, RouteInProgressActivity::class.java).apply {
-            putExtra("ROTA_ID",rotaId)
-        }
-        startActivity(intent)
     }
 
     private fun startLocationService() {
         val intent = Intent(this, LocationService::class.java).apply {
-            putExtra("ROTA_ID",rotaId)
+            putExtra("TRAJETO_ID", rota_id_back)
+            putExtra("ROTA_ID", rotaId)
         }
 
         ContextCompat.startForegroundService(this, intent)

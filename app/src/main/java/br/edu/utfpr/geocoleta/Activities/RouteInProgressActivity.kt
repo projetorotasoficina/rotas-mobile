@@ -6,6 +6,7 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import br.edu.utfpr.geocoleta.Data.Models.CoordinatesDTO
 import br.edu.utfpr.geocoleta.Data.Network.RetrovitClient
 import br.edu.utfpr.geocoleta.Data.Repository.CoordinatesRepository
 import br.edu.utfpr.geocoleta.R
@@ -57,12 +58,12 @@ class RouteInProgressActivity : AppCompatActivity() {
     }
 
     fun seendCoordinates(){
+        val pendentes = CoordinatesRepository(this@RouteInProgressActivity).listarPendentes()
+        if (pendentes.isEmpty()) return
         lifecycleScope.launch {
             try {
-                val coordinates = CoordinatesRepository(this@RouteInProgressActivity).listByRotaId(rotaId)
-
-                if (coordinates.isNotEmpty()) {
-                    val response = RetrovitClient.api.sendCoordinate(coordinates)
+                if (pendentes.isNotEmpty()) {
+                    val response = RetrovitClient.api.sendCoordinate(CoordinatesDTO.fromEntityList(pendentes))
 
                     if (response.isSuccessful) {
                         Toast.makeText(

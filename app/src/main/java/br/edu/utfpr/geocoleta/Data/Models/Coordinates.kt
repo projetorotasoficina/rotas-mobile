@@ -6,5 +6,6 @@ data class Coordinates (
     val latitude: Double,
     val longitude: Double,
     val horario : String,
-    val observacao : String
+    val observacao : String,
+    var statusEnvio : String
 )
