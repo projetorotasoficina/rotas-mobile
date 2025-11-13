@@ -15,7 +15,7 @@ class CoordinatesRepository(context: Context) {
             put(DatabaseContract.Coordenada.COLUMN_ROTA_ID, coord.trajetoId)
             put(DatabaseContract.Coordenada.COLUMN_LATITUDE, coord.latitude)
             put(DatabaseContract.Coordenada.COLUMN_LONGITUDE, coord.longitude)
-            put(DatabaseContract.Coordenada.COLUMN_STATUS_ENVIO, "PENDENTE")
+            put(DatabaseContract.Coordenada.COLUMN_STATUS_ENVIO, coord.statusEnvio)
             put(DatabaseContract.Coordenada.COLUMN_HORARIO, coord.horario)
             put(DatabaseContract.Coordenada.COLUMN_OBSERVACAO, coord.observacao)
         }
@@ -61,7 +61,8 @@ class CoordinatesRepository(context: Context) {
                 val longitude = getDouble(getColumnIndexOrThrow(DatabaseContract.Coordenada.COLUMN_LONGITUDE))
                 val horario = getString(getColumnIndexOrThrow(DatabaseContract.Coordenada.COLUMN_HORARIO))
                 val observacao = getString(getColumnIndexOrThrow(DatabaseContract.Coordenada.COLUMN_OBSERVACAO))
-                lista.add(Coordinates(id, trajetoId, latitude, longitude, horario, observacao))
+                val statusEnvio = getString(getColumnIndexOrThrow(DatabaseContract.Coordenada.COLUMN_STATUS_ENVIO))
+                lista.add(Coordinates(id, trajetoId, latitude, longitude, horario, observacao, statusEnvio))
             }
         }
         cursor.close()
@@ -87,7 +88,8 @@ class CoordinatesRepository(context: Context) {
                 val longitude = getDouble(getColumnIndexOrThrow(DatabaseContract.Coordenada.COLUMN_LONGITUDE))
                 val horario = getString(getColumnIndexOrThrow(DatabaseContract.Coordenada.COLUMN_HORARIO))
                 val observacao = getString(getColumnIndexOrThrow(DatabaseContract.Coordenada.COLUMN_OBSERVACAO))
-                lista.add(Coordinates(id, trajetoId, latitude, longitude, horario, observacao))
+                val statusEnvio = getString(getColumnIndexOrThrow(DatabaseContract.Coordenada.COLUMN_STATUS_ENVIO))
+                lista.add(Coordinates(id, trajetoId, latitude, longitude, horario, observacao, statusEnvio))
             }
         }
         cursor.close()
@@ -115,7 +117,8 @@ class CoordinatesRepository(context: Context) {
                 val longitude = getDouble(getColumnIndexOrThrow(DatabaseContract.Coordenada.COLUMN_LONGITUDE))
                 val horario = getString(getColumnIndexOrThrow(DatabaseContract.Coordenada.COLUMN_HORARIO))
                 val observacao = getString(getColumnIndexOrThrow(DatabaseContract.Coordenada.COLUMN_OBSERVACAO))
-                lista.add(Coordinates(id, trajetoId, latitude, longitude, horario, observacao))
+                val statusEnvio = getString(getColumnIndexOrThrow(DatabaseContract.Coordenada.COLUMN_STATUS_ENVIO))
+                lista.add(Coordinates(id, trajetoId, latitude, longitude, horario, observacao, statusEnvio))
             }
         }
         cursor.close()

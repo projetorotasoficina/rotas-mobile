@@ -11,6 +11,7 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -24,6 +25,7 @@ import kotlinx.coroutines.launch
 import java.net.UnknownHostException
 
 class MainActivity : AppCompatActivity() {
+
     private lateinit var repositoryTrucker: TruckerRepository
     private lateinit var repositoryTruck: TruckRepository
     private lateinit var repositoryRoute: RouteRepository
@@ -85,11 +87,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupListeners() {
         btnEntrar.setOnClickListener {
-            if (validarEProsseguir()) {
-                val intent = Intent(this, SelectTruckActivity::class.java)
-                intent.putExtra("cpf", etCpf.text.toString())
-                startActivity(intent)
-            }
+            validarEProsseguir()
         }
 
         etCpf.addTextChangedListener(object : TextWatcher {
@@ -101,25 +99,38 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    private fun validarEProsseguir(): Boolean {
+    private fun validarEProsseguir() {
         val cpfDigitado = etCpf.text.toString().trim()
         val cpfNumeros = cpfDigitado.replace("[^\\d]".toRegex(), "")
 
         if (cpfDigitado.isEmpty()) {
             showCpfError("O campo CPF não pode estar vazio.")
-            return false
+            return
         }
         if (cpfNumeros.length != 11 || !isCpfValido(cpfNumeros)) {
             showCpfError("Digite um CPF válido.")
-            return false
+            return
         }
+
+        val motorista = repositoryTrucker.findByCpf(cpfNumeros)
+
+        if (motorista != null) {
+            if (motorista.ativo) {
+                showConfirmationDialog(motorista.nome, cpfDigitado)
+            } else {
+                showCpfError("Este usuário está inativo e não pode acessar o sistema.")
+            }
+        } else {
+            showCpfError("Motorista não encontrado.")
+        }
+
+        // Salvar CPF na sessão
         val sharedCpf = getSharedPreferences("UserSession", Context.MODE_PRIVATE)
         sharedCpf.edit()
             .putString("cpf_usuario", etCpf.text.toString())
             .apply()
 
         saveCpfPreference()
-        return true
     }
 
     private fun showCpfError(message: String) {
@@ -138,12 +149,12 @@ class MainActivity : AppCompatActivity() {
     private fun isCpfValido(cpf: String): Boolean {
         if (cpf.all { it == cpf[0] }) return false
 
-        try {
+        return try {
             val dv1 = calcularDv(cpf.substring(0, 9), 10)
             val dv2 = calcularDv(cpf.substring(0, 10), 11)
-            return cpf[9].toString().toInt() == dv1 && cpf[10].toString().toInt() == dv2
+            cpf[9].toString().toInt() == dv1 && cpf[10].toString().toInt() == dv2
         } catch (e: Exception) {
-            return false
+            false
         }
     }
 
@@ -163,7 +174,6 @@ class MainActivity : AppCompatActivity() {
             private val mask = "###.###.###-##"
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val str = s.toString().replace("[^\\d]".toRegex(), "")
                 var cpf = ""
@@ -192,7 +202,6 @@ class MainActivity : AppCompatActivity() {
                 etCpf.setSelection(cpf.length)
                 resetCpfErrorState()
             }
-
             override fun afterTextChanged(s: Editable?) {}
         })
     }
@@ -219,5 +228,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun showLoading(show: Boolean) {
         loadingLayout.visibility = if (show) View.VISIBLE else View.GONE
+    }
+
+    private fun showConfirmationDialog(nomeMotorista: String, cpf: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Confirmar Identidade")
+            .setMessage("Você é $nomeMotorista?")
+            .setPositiveButton("Sim, sou eu") { _, _ ->
+                val intent = Intent(this, SelectTruckActivity::class.java)
+                intent.putExtra("cpf", cpf)
+                startActivity(intent)
+            }
+            .setNegativeButton("Não sou eu", null)
+            .show()
     }
 }

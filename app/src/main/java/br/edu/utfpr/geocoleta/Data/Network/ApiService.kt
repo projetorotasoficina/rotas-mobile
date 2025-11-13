@@ -3,6 +3,7 @@ package br.edu.utfpr.geocoleta.Data.Network
 import br.edu.utfpr.geocoleta.Data.Models.ActivationRequest
 import br.edu.utfpr.geocoleta.Data.Models.ActivationResponse
 import br.edu.utfpr.geocoleta.Data.Models.Coordinates
+import br.edu.utfpr.geocoleta.Data.Models.CoordinatesDTO
 import br.edu.utfpr.geocoleta.Data.Models.Route
 import br.edu.utfpr.geocoleta.Data.Models.Trajeto
 import br.edu.utfpr.geocoleta.Data.Models.TrajetoResponse
@@ -29,11 +30,14 @@ interface ApiService {
     suspend fun activate(@Body request: ActivationRequest): ActivationResponse
 
     @POST("pontos-trajeto/registrar-lote")
-    suspend fun sendCoordinate(@Body coordinate: List<Coordinates>): Response<Unit>
+    suspend fun sendCoordinate(@Body coordinate: List<CoordinatesDTO>): Response<Unit>
 
     @POST("trajetos/iniciar")
     suspend fun registrarTrajeto(@Body trajeto: Trajeto): Response<TrajetoResponse>
 
     @PUT("trajetos/{id}/finalizar")
     suspend fun finalizarTrajeto(@Path("id") id: Int): Response<TrajetoResponse>
+
+    @POST("pontos-trajeto/registrar")
+    suspend fun sendOneLocation(@Body coordinate: CoordinatesDTO): Response<Unit>
 }
