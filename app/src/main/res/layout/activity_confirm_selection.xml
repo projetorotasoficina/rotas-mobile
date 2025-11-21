@@ -7,6 +7,7 @@
     android:background="@color/white"
     tools:context=".Activities.ConfirmSelectionActivity">
 
+    <!-- HEADER -->
     <RelativeLayout
         android:id="@+id/headerLayout"
         android:layout_width="match_parent"
@@ -32,22 +33,73 @@
             android:text="Confirmar Seleção"
             android:textAppearance="@style/TextAppearance.Title"
             android:textColor="@color/foreground" />
-
     </RelativeLayout>
 
+    <!-- DRIVER CARD -->
     <androidx.cardview.widget.CardView
-        android:id="@+id/truckCard"
+        android:id="@+id/driverCard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="@dimen/spacing_lg"
+        android:layout_marginTop="8dp"
         app:cardCornerRadius="@dimen/radius_lg"
         app:cardElevation="@dimen/elevation_sm"
         app:layout_constraintTop_toBottomOf="@id/headerLayout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintVertical_chainStyle="packed"
-        app:layout_constraintBottom_toTopOf="@id/routeCard"
-        android:layout_marginTop="@dimen/spacing_lg">
+        app:layout_constraintBottom_toTopOf="@id/truckCard"
+        app:layout_constraintVertical_chainStyle="packed">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="@dimen/padding_lg"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_person"
+                app:tint="@color/primary_blue" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginStart="@dimen/spacing_md">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Motorista"
+                    android:textAppearance="@style/TextAppearance.Subtitle"
+                    android:textColor="@color/foreground" />
+
+                <TextView
+                    android:id="@+id/driverNameTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="João da Silva"
+                    android:textAppearance="@style/TextAppearance.Body"
+                    android:textColor="@color/muted_foreground" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- TRUCK CARD -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/truckCard"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/spacing_lg"
+        android:layout_marginTop="4dp"
+        app:cardCornerRadius="@dimen/radius_lg"
+        app:cardElevation="@dimen/elevation_sm"
+        app:layout_constraintTop_toBottomOf="@id/driverCard"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/routeCard">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -60,7 +112,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:src="@drawable/ic_truck"
-                app:tint="@color/primary_blue"/>
+                app:tint="@color/primary_blue" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -73,7 +125,7 @@
                     android:layout_height="wrap_content"
                     android:text="Caminhão Selecionado"
                     android:textAppearance="@style/TextAppearance.Subtitle"
-                    android:textColor="@color/foreground"/>
+                    android:textColor="@color/foreground" />
 
                 <TextView
                     android:id="@+id/truckModelTextView"
@@ -81,7 +133,7 @@
                     android:layout_height="wrap_content"
                     tools:text="Volkswagen Constellation"
                     android:textAppearance="@style/TextAppearance.Body"
-                    android:textColor="@color/muted_foreground"/>
+                    android:textColor="@color/muted_foreground" />
 
                 <TextView
                     android:id="@+id/truckPlateTextView"
@@ -89,23 +141,24 @@
                     android:layout_height="wrap_content"
                     tools:text="DEF-5678"
                     android:textAppearance="@style/TextAppearance.Body"
-                    android:textColor="@color/muted_foreground"/>
+                    android:textColor="@color/muted_foreground" />
             </LinearLayout>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
+    <!-- ROUTE CARD -->
     <androidx.cardview.widget.CardView
         android:id="@+id/routeCard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="@dimen/spacing_lg"
+        android:layout_marginTop="4dp"
         app:cardCornerRadius="@dimen/radius_lg"
         app:cardElevation="@dimen/elevation_sm"
         app:layout_constraintTop_toBottomOf="@id/truckCard"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/buttonsContainer"
-        android:layout_marginTop="@dimen/spacing_md">
+        app:layout_constraintBottom_toTopOf="@id/buttonsContainer">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -118,7 +171,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:src="@drawable/ic_route"
-                app:tint="@color/primary_blue"/>
+                app:tint="@color/primary_blue" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -131,7 +184,7 @@
                     android:layout_height="wrap_content"
                     android:text="Rota Selecionada"
                     android:textAppearance="@style/TextAppearance.Subtitle"
-                    android:textColor="@color/foreground"/>
+                    android:textColor="@color/foreground" />
 
                 <TextView
                     android:id="@+id/routeNameTextView"
@@ -139,7 +192,7 @@
                     android:layout_height="wrap_content"
                     tools:text="Rota Bairro Sul"
                     android:textAppearance="@style/TextAppearance.Body"
-                    android:textColor="@color/muted_foreground"/>
+                    android:textColor="@color/muted_foreground" />
 
                 <TextView
                     android:id="@+id/routeObservationsTextView"
@@ -147,11 +200,12 @@
                     android:layout_height="wrap_content"
                     tools:text="Resíduo Reciclável"
                     android:textAppearance="@style/TextAppearance.Body"
-                    android:textColor="@color/muted_foreground"/>
+                    android:textColor="@color/muted_foreground" />
             </LinearLayout>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
+    <!-- BUTTONS -->
     <LinearLayout
         android:id="@+id/buttonsContainer"
         android:layout_width="0dp"
@@ -171,7 +225,6 @@
             android:textSize="16sp"
             app:backgroundTint="@color/primary"
             app:cornerRadius="10dp" />
-
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
