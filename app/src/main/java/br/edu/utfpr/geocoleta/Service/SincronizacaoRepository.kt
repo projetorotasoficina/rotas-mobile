@@ -1,6 +1,7 @@
 package br.edu.utfpr.geocoleta.Service
 
 import android.content.Context
+import br.edu.utfpr.geocoleta.Data.Models.CoordinatesDTO
 import br.edu.utfpr.geocoleta.Data.Network.ApiService
 import br.edu.utfpr.geocoleta.Data.Network.RetrovitClient
 import br.edu.utfpr.geocoleta.Data.Repository.CoordinatesRepository
@@ -16,7 +17,7 @@ class SincronizacaoRepository(
         if (pendentes.isEmpty()) return
 
         try {
-            val response = api.sendCoordinate(pendentes)
+            val response = api.sendCoordinate(CoordinatesDTO.fromEntityList(coordRepo.listarPendentes()))
             if (response.isSuccessful) {
                 pendentes.forEach { coordRepo.marcarComoEnviado(it.id) }
                 println("${pendentes.size} pontos enviados com sucesso!")
