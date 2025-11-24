@@ -4,12 +4,18 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.location.Location
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import br.edu.utfpr.geocoleta.Data.Models.Coordinates
+import br.edu.utfpr.geocoleta.Data.Models.CoordinatesDTO
+import br.edu.utfpr.geocoleta.Data.Network.RetrovitClient
 import br.edu.utfpr.geocoleta.Data.Repository.CoordinatesRepository
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -21,6 +27,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 class LocationService : Service() {
 
@@ -28,6 +38,10 @@ class LocationService : Service() {
     private lateinit var locationCallback: LocationCallback
     private lateinit var coordinatesRepository: CoordinatesRepository
     private var rotaId: Int = 0
+    private var trajetoId: Int = 0
+    private val serviceJob = Job()
+
+    private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
 
     override fun onCreate() {
         super.onCreate()
@@ -47,6 +61,7 @@ class LocationService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         rotaId = intent?.getIntExtra("ROTA_ID", 0) ?: 0
+        trajetoId = intent?.getIntExtra("TRAJETO_ID", 0) ?: 0
 
         startLocationUpdates()
         return START_STICKY
@@ -61,13 +76,44 @@ class LocationService : Service() {
             override fun onLocationResult(result: LocationResult) {
                 for (location: Location in result.locations) {
                     val date = Date(location.time)
-
-                    val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-                    dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+                    val dateFormat = SimpleDateFormat(
+                        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+                        Locale.getDefault()
+                    ).apply { timeZone = TimeZone.getTimeZone("UTC") }
                     val dateString = dateFormat.format(date)
 
-                    val coordenada = Coordinates( 0,rotaId, location.latitude, location.longitude, dateString, "")
-                    coordinatesRepository.insert(coordenada)
+                    var coordenada = Coordinates(
+                        id = 0,
+                        trajetoId = trajetoId,
+                        latitude = location.latitude,
+                        longitude = location.longitude,
+                        horario = dateString,
+                        observacao = "",
+                        statusEnvio = "PENDENTE"
+                    )
+
+                    serviceScope.launch {
+                        if (!isInternetAvailable(this@LocationService)) {
+                            Log.e("API", "Sem conexão com a internet. Salvando localmente.")
+                            coordenada.statusEnvio = "PENDENTE"
+                            coordinatesRepository.insert(coordenada)
+                            return@launch
+                        }
+                        try {
+                            val response = RetrovitClient.api.sendOneLocation(
+                                CoordinatesDTO.fromEntity(coordenada)
+                            )
+                            if (response.isSuccessful) {
+                                coordenada.statusEnvio = "ENVIADO"
+                            } else {
+                                Log.e("API", "Falha ao enviar coordenada: ${response.code()}")
+                            }
+                        } catch (e: Exception) {
+                            Log.e("API", "Erro ao enviar coordenada: ${e.message}")
+                        } finally {
+                            coordinatesRepository.insert(coordenada)
+                        }
+                    }
                 }
             }
         }
@@ -78,6 +124,7 @@ class LocationService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         fusedLocationClient.removeLocationUpdates(locationCallback)
+        serviceJob.cancel()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -91,6 +138,19 @@ class LocationService : Service() {
             )
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
+        }
+    }
+
+    fun isInternetAvailable(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val network = connectivityManager.activeNetwork ?: return false
+            val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
+            return activeNetwork.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        } else {
+            val networkInfo = connectivityManager.activeNetworkInfo
+            return networkInfo != null && networkInfo.isConnected
         }
     }
 }
