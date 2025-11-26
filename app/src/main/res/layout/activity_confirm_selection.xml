@@ -32,7 +32,6 @@
             android:text="Confirmar Seleção"
             android:textAppearance="@style/TextAppearance.Title"
             android:textColor="@color/foreground" />
-
     </RelativeLayout>
 
     <androidx.cardview.widget.CardView

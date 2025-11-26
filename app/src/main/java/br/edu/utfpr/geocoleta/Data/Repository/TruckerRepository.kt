@@ -69,6 +69,13 @@ class TruckerRepository(context: Context) {
         db.close()
         return rows
     }
+    
+    fun deleteAll(): Int {
+        val db = dbHelper.writableDatabase
+        val rows = db.delete(DatabaseContract.Motorista.TABLE_NAME, null, null)
+        db.close()
+        return rows
+    }
 
     fun listAll(): List<Trucker> {
         val db = dbHelper.readableDatabase
@@ -142,6 +149,10 @@ class TruckerRepository(context: Context) {
     }
 
     suspend fun getTruckers(){
-        apiService.getMotoristas().forEach { insert(it) }
+        val motoristas = apiService.getMotoristas()
+        if (motoristas.isNotEmpty()) {
+            deleteAll() // Limpa a tabela antes de inserir os novos dados
+            motoristas.forEach { insert(it) }
+        }
     }
 }
