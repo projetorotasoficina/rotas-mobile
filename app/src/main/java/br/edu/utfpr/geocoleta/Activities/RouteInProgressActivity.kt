@@ -2,6 +2,7 @@ package br.edu.utfpr.geocoleta.Activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.format.DateUtils
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -55,6 +56,16 @@ class RouteInProgressActivity : AppCompatActivity() {
                 }
             }
         }
+
+
+        lifecycleScope.launch {
+            LocationDataBus.locationFlow.collect { update ->
+
+                val tempo = DateUtils.formatElapsedTime(update.elapsedSeconds)
+                val distanciaKm = update.totalDistanceMeters / 1000f
+            }
+        }
+
     }
 
     fun seendCoordinates(){
