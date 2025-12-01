@@ -79,6 +79,7 @@ class SelectTruckActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     showLoading(false)
                     tvEmptyState.visibility = View.VISIBLE
+                    Toast.makeText(this@SelectTruckActivity, "Erro ao carregar caminhões.", Toast.LENGTH_SHORT).show()
                 }
                 e.printStackTrace()
             }
@@ -148,6 +149,7 @@ class SelectTruckActivity : AppCompatActivity() {
                 putExtra("placa", truck.placa)
                 putExtra("descricao", truck.modelo)
                 putExtra("truck_id", truck.id)
+                putExtra("residueType", truck.tipoResiduo)
             }
             startActivity(intent)
 

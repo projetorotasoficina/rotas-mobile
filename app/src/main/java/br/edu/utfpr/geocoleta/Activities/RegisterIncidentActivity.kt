@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
@@ -14,8 +13,11 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.lifecycle.lifecycleScope
 import br.edu.utfpr.geocoleta.R
 import br.edu.utfpr.geocoleta.databinding.ActivityRegisterIncidentBinding
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.io.File
 
 class RegisterIncidentActivity : AppCompatActivity() {
@@ -57,7 +59,6 @@ class RegisterIncidentActivity : AppCompatActivity() {
 
         ivBack = findViewById(R.id.ivBack)
 
-        // Restaura o URI da imagem se a atividade foi recriada
         savedInstanceState?.getParcelable<Uri>("latestTmpUri")?.let {
             latestTmpUri = it
         }
@@ -65,7 +66,6 @@ class RegisterIncidentActivity : AppCompatActivity() {
         setupListeners()
     }
 
-    // Salva o URI da imagem antes que a atividade seja destruída
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putParcelable("latestTmpUri", latestTmpUri)
@@ -77,6 +77,12 @@ class RegisterIncidentActivity : AppCompatActivity() {
         binding.removePhotoButton.setOnClickListener { resetImageSelection() }
         binding.saveIncidentButton.setOnClickListener { showSuccessAndFinish() }
         binding.cancelButton.setOnClickListener { finish() }
+    }
+
+    private fun showLoading(isLoading: Boolean) {
+        binding.loadingLayout.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.saveIncidentButton.isEnabled = !isLoading
+        binding.cancelButton.isEnabled = !isLoading
     }
 
     private fun showImageSourceDialog() {
@@ -136,8 +142,14 @@ class RegisterIncidentActivity : AppCompatActivity() {
     }
 
     private fun showSuccessAndFinish() {
+        showLoading(true)
+
         // TODO: Adicionar a lógica de envio para a API aqui
-        Toast.makeText(this, "Incidente registrado com sucesso!", Toast.LENGTH_SHORT).show()
-        finish()
+        // Simulando uma chamada de rede com um delay
+        lifecycleScope.launch {
+            delay(2000) // Simula 2 segundos de carregamento
+            Toast.makeText(this@RegisterIncidentActivity, "Incidente registrado com sucesso!", Toast.LENGTH_SHORT).show()
+            finish()
+        }
     }
 }
