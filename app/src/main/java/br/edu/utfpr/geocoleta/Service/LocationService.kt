@@ -15,6 +15,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import br.edu.utfpr.geocoleta.Data.Models.Coordinates
 import br.edu.utfpr.geocoleta.Data.Models.CoordinatesDTO
+import br.edu.utfpr.geocoleta.Data.Models.TimeDistance
 import br.edu.utfpr.geocoleta.Data.Network.RetrovitClient
 import br.edu.utfpr.geocoleta.Data.Repository.CoordinatesRepository
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -37,6 +38,9 @@ class LocationService : Service() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
     private lateinit var coordinatesRepository: CoordinatesRepository
+    private var totalDistanceMeters: Float = 0f
+    private var lastLocation: Location? = null
+    private var startTime: Long = 0L
     private var rotaId: Int = 0
     private var trajetoId: Int = 0
     private val serviceJob = Job()
@@ -63,6 +67,10 @@ class LocationService : Service() {
         rotaId = intent?.getIntExtra("ROTA_ID", 0) ?: 0
         trajetoId = intent?.getIntExtra("TRAJETO_ID", 0) ?: 0
 
+
+        if (startTime == 0L) {
+            startTime = System.currentTimeMillis()
+        }
         startLocationUpdates()
         return START_STICKY
     }
@@ -75,6 +83,17 @@ class LocationService : Service() {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 for (location: Location in result.locations) {
+                    lastLocation?.let { last ->
+                        val distance = last.distanceTo(location)
+                        if (distance > 0.5f) {
+                            totalDistanceMeters += distance
+                        }
+                    }
+
+                    val elapsedMillis = System.currentTimeMillis() - startTime
+                    val elapsedSeconds = elapsedMillis / 1000
+                    lastLocation = location
+
                     val date = Date(location.time)
                     val dateFormat = SimpleDateFormat(
                         "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
@@ -93,6 +112,13 @@ class LocationService : Service() {
                     )
 
                     serviceScope.launch {
+                        LocationDataBus.send(
+                            TimeDistance(
+                                totalDistanceMeters = totalDistanceMeters,
+                                elapsedSeconds = elapsedSeconds
+                            )
+                        )
+
                         if (!isInternetAvailable(this@LocationService)) {
                             Log.e("API", "Sem conexão com a internet. Salvando localmente.")
                             coordenada.statusEnvio = "PENDENTE"
