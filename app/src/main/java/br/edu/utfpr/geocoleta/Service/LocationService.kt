@@ -13,11 +13,16 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import br.edu.utfpr.geocoleta.Data.Models.Coordinates
 import br.edu.utfpr.geocoleta.Data.Models.CoordinatesDTO
 import br.edu.utfpr.geocoleta.Data.Models.TimeDistance
 import br.edu.utfpr.geocoleta.Data.Network.RetrovitClient
 import br.edu.utfpr.geocoleta.Data.Repository.CoordinatesRepository
+import br.edu.utfpr.geocoleta.Worker.EnvioPendentesWorker
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -35,6 +40,11 @@ import kotlinx.coroutines.launch
 
 class LocationService : Service() {
 
+    companion object {
+        const val ACTION_FINALIZAR = "ACTION_FINALIZAR"
+        const val WORK_NAME_ENVIO_PENDENTES = "WORK_ENVIO_PENDENTES"
+    }
+
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
     private lateinit var coordinatesRepository: CoordinatesRepository
@@ -44,7 +54,6 @@ class LocationService : Service() {
     private var rotaId: Int = 0
     private var trajetoId: Int = 0
     private val serviceJob = Job()
-
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
 
     override fun onCreate() {
@@ -64,9 +73,15 @@ class LocationService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
+        when (intent?.action) {
+            ACTION_FINALIZAR -> {
+                finalizeOperation()
+                return START_NOT_STICKY
+            }
+        }
+
         rotaId = intent?.getIntExtra("ROTA_ID", 0) ?: 0
         trajetoId = intent?.getIntExtra("TRAJETO_ID", 0) ?: 0
-
 
         if (startTime == 0L) {
             startTime = System.currentTimeMillis()
@@ -101,7 +116,7 @@ class LocationService : Service() {
                     ).apply { timeZone = TimeZone.getTimeZone("UTC") }
                     val dateString = dateFormat.format(date)
 
-                    var coordenada = Coordinates(
+                    val coordenada = Coordinates(
                         id = 0,
                         trajetoId = trajetoId,
                         latitude = location.latitude,
@@ -112,6 +127,7 @@ class LocationService : Service() {
                     )
 
                     serviceScope.launch {
+                        // enviar para UI via SharedFlow
                         LocationDataBus.send(
                             TimeDistance(
                                 totalDistanceMeters = totalDistanceMeters,
@@ -147,9 +163,90 @@ class LocationService : Service() {
         fusedLocationClient.requestLocationUpdates(request, locationCallback, mainLooper)
     }
 
+    /**
+     * Método que tenta enviar os pontos pendentes imediatamente.
+     * Caso não consiga (ex.: sem internet, ou falhas), agenda WorkManager para garantir retry.
+     */
+    private fun finalizeOperation() {
+        serviceScope.launch {
+            Log.i("FINALIZE", "Finalizando operação (tentativa imediata)...")
+
+            try {
+                val pendentes = coordinatesRepository.listarPendentes()
+                var anyPendingLeft = false
+
+                for (coord in pendentes) {
+                    try {
+                        val response = RetrovitClient.api.sendOneLocation(
+                            CoordinatesDTO.fromEntity(coord)
+                        )
+                        if (response.isSuccessful) {
+                            coord.statusEnvio = "ENVIADO"
+                            coordinatesRepository.update(coord)
+                        } else {
+                            Log.e("FINALIZE", "Falha ao enviar pendente: ${response.code()}")
+                            anyPendingLeft = true
+                        }
+                    } catch (e: Exception) {
+                        Log.e("FINALIZE", "Erro ao enviar pendente: ${e.message}")
+                        anyPendingLeft = true
+                    }
+                }
+
+                try {
+                    if (trajetoId != 0) {
+                        RetrovitClient.api.finalizarTrajeto(trajetoId)
+                        Log.i("FINALIZE", "Operação finalizada no servidor.")
+                    }
+                } catch (e: Exception) {
+                    Log.e("FINALIZE", "Erro ao finalizar operação: ${e.message}")
+                    anyPendingLeft = true
+                }
+
+                if (anyPendingLeft) {
+                    scheduleWorkerForPending()
+                }
+            } catch (e: Exception) {
+                Log.e("FINALIZE", "Erro durante finalizeOperation: ${e.message}")
+                scheduleWorkerForPending()
+            } finally {
+                stopSelf()
+            }
+        }
+    }
+
+    /**
+     * Método chamado quando a task do app é removida (swipe Recent Apps).
+     * Aqui fazemos attempt de envio e, se necessário, agendamos o worker.
+     */
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        Log.i("LocationService", "onTaskRemoved chamado — app removido da lista de recentes.")
+        finalizeOperation()
+    }
+
+    private fun scheduleWorkerForPending() {
+        val input = Data.Builder()
+            .putInt("TRAJETO_ID", trajetoId)
+            .build()
+
+        val request = OneTimeWorkRequestBuilder<EnvioPendentesWorker>()
+            .setInputData(input)
+            .build()
+
+        WorkManager.getInstance(applicationContext)
+            .enqueueUniqueWork(WORK_NAME_ENVIO_PENDENTES, ExistingWorkPolicy.KEEP, request)
+
+        Log.i("FINALIZE", "WorkManager agendado para envio pendentes.")
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        fusedLocationClient.removeLocationUpdates(locationCallback)
+        try {
+            fusedLocationClient.removeLocationUpdates(locationCallback)
+        } catch (e: Exception) {
+            // ignore
+        }
         serviceJob.cancel()
     }
 
@@ -168,7 +265,8 @@ class LocationService : Service() {
     }
 
     fun isInternetAvailable(context: Context): Boolean {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val network = connectivityManager.activeNetwork ?: return false
