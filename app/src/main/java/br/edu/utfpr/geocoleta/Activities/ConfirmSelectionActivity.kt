@@ -186,4 +186,14 @@ class ConfirmSelectionActivity : AppCompatActivity() {
 
         ContextCompat.startForegroundService(this, intent)
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        val finalizeIntent = Intent(this, LocationService::class.java).apply {
+            action = LocationService.ACTION_FINALIZAR
+        }
+
+        ContextCompat.startForegroundService(this, finalizeIntent)
+    }
 }

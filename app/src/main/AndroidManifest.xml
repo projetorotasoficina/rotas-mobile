@@ -74,6 +74,10 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="location" />
+
+        <service
+            android:name=".Worker.EnvioPendentesWorker"
+            android:exported="false" />
     </application>
 
 </manifest>
