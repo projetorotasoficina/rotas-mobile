@@ -24,7 +24,7 @@ import kotlinx.coroutines.withContext
 
 class SelectTruckActivity : AppCompatActivity() {
 
-    private lateinit var listaTrucks: List<Truck>
+    private var listaTrucks: List<Truck> = emptyList()
     private lateinit var truckAdapter: TruckAdapter
     private lateinit var truckRepository: TruckRepository
 

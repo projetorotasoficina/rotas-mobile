@@ -19,6 +19,7 @@ import br.edu.utfpr.geocoleta.Data.Repository.TruckerRepository
 import br.edu.utfpr.geocoleta.R
 import br.edu.utfpr.geocoleta.Service.LocationService
 import br.edu.utfpr.geocoleta.databinding.ActivityConfirmSelectionBinding
+import com.google.gson.Gson
 import kotlinx.coroutines.launch
 
 class ConfirmSelectionActivity : AppCompatActivity() {
@@ -29,7 +30,6 @@ class ConfirmSelectionActivity : AppCompatActivity() {
     private var rotaId: Int = 0
     private var caminhaoId: Int = 0
     private lateinit var motorista: Trucker
-    private var rota_id_back : Int = 0
 
     private val locationPermissions = arrayOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -65,21 +65,19 @@ class ConfirmSelectionActivity : AppCompatActivity() {
             return
         }
 
-
-
         ivBack = findViewById(R.id.ivBack)
 
         rotaId = intent.getIntExtra("ROTA_ID", 0)
         caminhaoId = intent.getIntExtra("CAMINHAO_ID", 0)
-        motorista = repositoryTrucker.findByCpf(cpf!!)!!
+        motorista = motoristaEncontrado
 
         val rotaNome = intent.getStringExtra("ROTA_NOME")
         val rotaObservacoes = intent.getStringExtra("ROTA_OBSERVACOES")
         val caminhaoPlaca = intent.getStringExtra("CAMINHAO_PLACA")
-        val caminhaoModelo = intent.getStringExtra("CAMINHAO_MODELO") // Recebe o modelo
+        val caminhaoModelo = intent.getStringExtra("CAMINHAO_MODELO")
 
         binding.truckPlateTextView.text = caminhaoPlaca
-        binding.truckModelTextView.text = caminhaoModelo // Exibe o modelo
+        binding.truckModelTextView.text = caminhaoModelo
         binding.routeNameTextView.text = rotaNome
         binding.routeObservationsTextView.text = rotaObservacoes
         binding.driverNameTextView.text = motorista.nome
@@ -125,65 +123,42 @@ class ConfirmSelectionActivity : AppCompatActivity() {
     private fun startAppFlow() {
         lifecycleScope.launch {
             try {
-                val trajeto = Trajeto(
+                val trajetoParaCriar = Trajeto(
                     rotaId = rotaId,
                     caminhaoId = caminhaoId,
                     motoristaId = motorista.id
                 )
 
-                val response = RetrovitClient.api.registrarTrajeto(trajeto)
+                val response = RetrovitClient.api.registrarTrajeto(trajetoParaCriar)
                 if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body != null) {
-                        val id = body.id
-                        val rotaIdRetornado = body.rotaId
+                    val trajetoCriado = response.body()
+                    if (trajetoCriado != null) {
+                        Toast.makeText(this@ConfirmSelectionActivity, "Trajeto enviado com sucesso!", Toast.LENGTH_SHORT).show()
 
-                        rota_id_back = id
-
-                        Toast.makeText(
-                            this@ConfirmSelectionActivity,
-                            "Trajeto enviado com sucesso!",
-                            Toast.LENGTH_SHORT
-                        ).show()
-
-                        val intent = Intent(
-                            this@ConfirmSelectionActivity,
-                            RouteInProgressActivity::class.java
-                        ).apply {
-                            putExtra("TRAJETO_ID", id)
-                            putExtra("ROTA_ID", rotaId)
+                        val intent = Intent(this@ConfirmSelectionActivity, RouteInProgressActivity::class.java).apply {
+                            putExtra("TRAJETO_JSON", Gson().toJson(trajetoCriado))
                         }
-                        startLocationService()
+                        startLocationService(trajetoCriado.id!!)
                         startActivity(intent)
 
                         return@launch
                     }
                 } else {
-                    Toast.makeText(
-                        this@ConfirmSelectionActivity,
-                        "Falha ao enviar: ${response.code()}",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    Toast.makeText(this@ConfirmSelectionActivity, "Falha ao registrar trajeto: ${response.code()}", Toast.LENGTH_LONG).show()
                     return@launch
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                Toast.makeText(
-                    this@ConfirmSelectionActivity,
-                    "Erro: ${e.message}",
-                    Toast.LENGTH_LONG
-                ).show()
+                Toast.makeText(this@ConfirmSelectionActivity, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
                 return@launch
             }
         }
     }
 
-    private fun startLocationService() {
+    private fun startLocationService(trajetoId: Int) {
         val intent = Intent(this, LocationService::class.java).apply {
-            putExtra("TRAJETO_ID", rota_id_back)
-            putExtra("ROTA_ID", rotaId)
+            putExtra("TRAJETO_ID", trajetoId)
         }
-
         ContextCompat.startForegroundService(this, intent)
     }
 
