@@ -29,7 +29,7 @@ interface ApiService {
     @POST("app/activate")
     suspend fun activate(@Body request: ActivationRequest): ActivationResponse
 
-    @POST("pontos-trajeto/registrar-lote")
+    @POST("pontos-trajeto/registrar-lote-atomico")
     suspend fun sendCoordinate(@Body coordinate: List<CoordinatesDTO>): Response<Unit>
 
     @POST("trajetos/iniciar")
@@ -40,4 +40,10 @@ interface ApiService {
 
     @POST("pontos-trajeto/registrar")
     suspend fun sendOneLocation(@Body coordinate: CoordinatesDTO): Response<Unit>
+
+    @GET("trajetos/{id}")
+    suspend fun getTrajeto(@Path("id") id: Int): Response<Trajeto>
+
+    @PUT("trajetos/{id}")
+    suspend fun updateTrajeto(@Path("id") id: Int, @Body trajeto: Trajeto): Response<Trajeto>
 }

@@ -31,10 +31,42 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="Rota em Andamento"
-            android:textAppearance="@style/TextAppearance.Title"
+            android:textAppearance="@style/TextAppearance.AppCompat.Title"
             android:textColor="@color/foreground" />
 
     </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/statsLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="@dimen/spacing_md"
+        android:layout_marginStart="@dimen/spacing_md"
+        android:layout_marginEnd="@dimen/spacing_md"
+        app:layout_constraintTop_toBottomOf="@id/headerLayout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/durationTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Duração: --:--"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+
+        <TextView
+            android:id="@+id/distanceTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Distância: 0.0 km"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+
+    </LinearLayout>
 
     <androidx.cardview.widget.CardView
         android:id="@+id/mapCard"
@@ -43,7 +75,7 @@
         android:layout_margin="@dimen/spacing_md"
         app:cardCornerRadius="@dimen/radius_lg"
         app:cardElevation="@dimen/elevation_sm"
-        app:layout_constraintTop_toBottomOf="@id/headerLayout"
+        app:layout_constraintTop_toBottomOf="@id/statsLayout"
         app:layout_constraintBottom_toTopOf="@id/buttonsContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -116,7 +148,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_md"
                 android:text="Finalizando rota..."
-                android:textAppearance="@style/TextAppearance.Body"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                 android:textColor="@color/white" />
         </LinearLayout>
     </FrameLayout>
