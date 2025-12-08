@@ -14,10 +14,17 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
+import br.edu.utfpr.geocoleta.Data.Models.Incident
+import br.edu.utfpr.geocoleta.Data.Network.RetrovitClient
 import br.edu.utfpr.geocoleta.R
 import br.edu.utfpr.geocoleta.databinding.ActivityRegisterIncidentBinding
-import kotlinx.coroutines.delay
+import com.google.gson.Gson
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 
 class RegisterIncidentActivity : AppCompatActivity() {
@@ -25,6 +32,50 @@ class RegisterIncidentActivity : AppCompatActivity() {
     private lateinit var binding: ActivityRegisterIncidentBinding
     private lateinit var ivBack: ImageView
     private var latestTmpUri: Uri? = null
+    private var trajetoId : Int = 0
+    private var lat_atual : Double = 0.0
+    private var lng_atual : Double = 0.0
+
+    private val requestCameraPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                openCamera()
+            } else {
+                Toast.makeText(
+                    this,
+                    "Permissão de acesso à câmera negada",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
+    private fun checkAndRequestCameraPermission() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                openCamera()
+            }
+
+            shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
+                AlertDialog.Builder(this)
+                    .setTitle("Permissão necessária")
+                    .setMessage("Para tirar fotos do incidente, o app precisa acessar a câmera.")
+                    .setPositiveButton("Permitir") { _, _ ->
+                        requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+            }
+
+            else -> {
+                requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
+    }
+
+    // ---------------------------------------------------------
 
     private val takePictureLauncher = registerForActivityResult(
         ActivityResultContracts.TakePicture()
@@ -42,16 +93,6 @@ class RegisterIncidentActivity : AppCompatActivity() {
         uri?.let { handleImageSelection(it) }
     }
 
-    private val requestCameraPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            openCamera()
-        } else {
-            Toast.makeText(this, "Permissão de acesso à câmera negada", Toast.LENGTH_SHORT).show()
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityRegisterIncidentBinding.inflate(layoutInflater)
@@ -62,6 +103,10 @@ class RegisterIncidentActivity : AppCompatActivity() {
         savedInstanceState?.getParcelable<Uri>("latestTmpUri")?.let {
             latestTmpUri = it
         }
+
+        trajetoId = intent?.getIntExtra("TRAJETO_ID", 0) ?: 0
+        lat_atual = intent?.getDoubleExtra("LAT_ATUAL", 0.0) ?: 0.0
+        lng_atual = intent?.getDoubleExtra("LNG_ATUAL", 0.0) ?: 0.0
 
         setupListeners()
     }
@@ -90,7 +135,7 @@ class RegisterIncidentActivity : AppCompatActivity() {
             .setTitle("Adicionar Foto")
             .setItems(arrayOf("Tirar Foto", "Escolher da Galeria")) { _, which ->
                 when (which) {
-                    0 -> checkAndOpenCamera()
+                    0 -> checkAndRequestCameraPermission() // <--- AGORA AQUI!
                     1 -> openGallery()
                 }
             }
@@ -99,14 +144,6 @@ class RegisterIncidentActivity : AppCompatActivity() {
 
     private fun openGallery() {
         pickImageLauncher.launch("image/*")
-    }
-
-    private fun checkAndOpenCamera() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            openCamera()
-        } else {
-            requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-        }
     }
 
     private fun openCamera() {
@@ -122,7 +159,11 @@ class RegisterIncidentActivity : AppCompatActivity() {
             deleteOnExit()
         }
 
-        return FileProvider.getUriForFile(this, "${applicationContext.packageName}.provider", tmpFile)
+        return FileProvider.getUriForFile(
+            this,
+            "${applicationContext.packageName}.provider",
+            tmpFile
+        )
     }
 
     private fun handleImageSelection(uri: Uri) {
@@ -142,14 +183,76 @@ class RegisterIncidentActivity : AppCompatActivity() {
     }
 
     private fun showSuccessAndFinish() {
+        if (latestTmpUri == null) {
+            Toast.makeText(this, "Selecione uma foto antes de enviar!", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val file = uriToFile(latestTmpUri!!)
+        if (file == null) {
+            Toast.makeText(this, "Erro ao processar imagem", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         showLoading(true)
 
-        // TODO: Adicionar a lógica de envio para a API aqui
-        // Simulando uma chamada de rede com um delay
         lifecycleScope.launch {
-            delay(2000) // Simula 2 segundos de carregamento
-            Toast.makeText(this@RegisterIncidentActivity, "Incidente registrado com sucesso!", Toast.LENGTH_SHORT).show()
-            finish()
+            try {
+                val api = RetrovitClient.api
+
+                val incidenteJson = createIncidentJson()
+                val fotoPart = createPhotoPart(file)
+
+                api.criarIncidenteComFoto(incidenteJson, fotoPart)
+
+                Toast.makeText(
+                    this@RegisterIncidentActivity,
+                    "Incidente registrado!",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                finish()
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(
+                    this@RegisterIncidentActivity,
+                    "Erro ao enviar: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+                showLoading(false)
+            }
         }
+    }
+
+    private fun uriToFile(uri: Uri): File? {
+        val inputStream = contentResolver.openInputStream(uri) ?: return null
+        val tempFile = File.createTempFile("incident_photo", ".jpg", cacheDir)
+        tempFile.outputStream().use { output ->
+            inputStream.copyTo(output)
+        }
+        return tempFile
+    }
+
+    private fun createIncidentJson(): RequestBody {
+        val incidente = Incident(
+            trajetoId = trajetoId,
+            nome = binding.incidentNameEditText.text.toString(),
+            observacoes = binding.incidentDetailsEditText.text.toString(),
+            lat = lat_atual,
+            lng = lng_atual
+        )
+
+        val json = Gson().toJson(incidente)
+        return json.toRequestBody("application/json".toMediaType())
+    }
+
+    private fun createPhotoPart(file: File): MultipartBody.Part {
+        val requestFile = file.asRequestBody("image/jpeg".toMediaType())
+        return MultipartBody.Part.createFormData(
+            "foto",
+            file.name,
+            requestFile
+        )
     }
 }
