@@ -131,7 +131,9 @@ class LocationService : Service() {
                         LocationDataBus.send(
                             TimeDistance(
                                 totalDistanceMeters = totalDistanceMeters,
-                                elapsedSeconds = elapsedSeconds
+                                elapsedSeconds = elapsedSeconds,
+                                lat = coordenada.latitude,
+                                lng = coordenada.longitude
                             )
                         )
 

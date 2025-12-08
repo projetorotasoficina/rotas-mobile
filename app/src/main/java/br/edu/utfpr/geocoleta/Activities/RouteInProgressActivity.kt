@@ -27,15 +27,15 @@ class RouteInProgressActivity : AppCompatActivity() {
     private var startTimeMillis: Long = 0L
     private var hasStartTime: Boolean = false
     private var firstUpdateReceived: Boolean = false
+    private var lat: Double = 0.0
+    private var lng: Double = 0.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityRouteInProgressBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // estado inicial: mostrar overlay de carregamento (buscar GPS)
         binding.loadingLayout.visibility = View.VISIBLE
-        // texto padrão definido no XML: "Preparando rota, buscando sinal de GPS..."
 
         val trajetoJson = intent.getStringExtra("TRAJETO_JSON")
         if (trajetoJson == null) {
@@ -48,14 +48,14 @@ class RouteInProgressActivity : AppCompatActivity() {
         binding.registerIncidentButton.setOnClickListener {
             val intent = Intent(this, RegisterIncidentActivity::class.java)
             intent.putExtra("TRAJETO_ID", trajeto.id)
+            intent.putExtra("LAT_ATUAL", lat)
+            intent.putExtra("LNG_ATUAL", lng)
             startActivity(intent)
         }
 
         binding.finishRouteButton.setOnClickListener {
             lifecycleScope.launch {
-                // mostra overlay de "Finalizando rota..."
                 binding.loadingLayout.visibility = View.VISIBLE
-                // se tiver o TextView no loader:
                 binding.loadingTextView.text = "Finalizando rota..."
                 finalizarTrajeto()
             }
@@ -66,6 +66,8 @@ class RouteInProgressActivity : AppCompatActivity() {
             LocationDataBus.locationFlow.collect { update ->
                 totalDistanceMeters = update.totalDistanceMeters
                 val elapsedSeconds = update.elapsedSeconds
+                lat = update.lat
+                lng = update.lng
 
                 // primeira atualização real: some o "carregando GPS"
                 if (!firstUpdateReceived) {
