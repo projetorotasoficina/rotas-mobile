@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import br.edu.utfpr.geocoleta.Data.Models.Trucker
 import br.edu.utfpr.geocoleta.Data.Repository.RouteRepository
 import br.edu.utfpr.geocoleta.Data.Repository.TruckRepository
 import br.edu.utfpr.geocoleta.Data.Repository.TruckerRepository
@@ -110,7 +111,7 @@ class MainActivity : AppCompatActivity() {
 
             if (motorista != null) {
                 if (motorista.ativo) {
-                    showConfirmationDialog(motorista.nome, cpfDigitado)
+                    showConfirmationDialog(motorista)
                 } else {
                     showCpfError("Este usuário está inativo e não pode acessar o sistema.")
                 }
@@ -120,14 +121,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showConfirmationDialog(nomeMotorista: String, cpf: String) {
+    private fun showConfirmationDialog(motorista: Trucker) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_confirm_identity, null)
 
         val dialogMessage = dialogView.findViewById<TextView>(R.id.dialog_message)
         val btnPositive = dialogView.findViewById<MaterialButton>(R.id.btn_positive)
         val btnNegative = dialogView.findViewById<MaterialButton>(R.id.btn_negative)
 
-        dialogMessage.text = "Você é $nomeMotorista?"
+        dialogMessage.text = "Você é ${motorista.nome}?"
 
         val dialog = MaterialAlertDialogBuilder(this)
             .setView(dialogView)
@@ -135,9 +136,10 @@ class MainActivity : AppCompatActivity() {
             .create()
 
         btnPositive.setOnClickListener {
-            saveCpfPreference(cpf)
-            val intent = Intent(this, SelectTruckActivity::class.java)
-            intent.putExtra("cpf", cpf)
+            saveCpfPreference(binding.etCpf.text.toString().trim())
+            val intent = Intent(this, SelectTruckActivity::class.java).apply {
+                putExtra("MOTORISTA_ID", motorista.id)
+            }
             startActivity(intent)
             dialog.dismiss()
         }

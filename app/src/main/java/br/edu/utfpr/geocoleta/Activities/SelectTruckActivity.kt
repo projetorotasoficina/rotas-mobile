@@ -1,5 +1,6 @@
 package br.edu.utfpr.geocoleta.Activities
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
@@ -15,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import br.edu.utfpr.geocoleta.Adapters.TruckAdapter
 import br.edu.utfpr.geocoleta.Data.Models.Truck
+import br.edu.utfpr.geocoleta.Data.Network.RetrovitClient
 import br.edu.utfpr.geocoleta.Data.Repository.TruckRepository
 import br.edu.utfpr.geocoleta.R
 import br.edu.utfpr.geocoleta.Service.LocationDataBus
@@ -22,6 +24,7 @@ import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.net.UnknownHostException
 
 class SelectTruckActivity : AppCompatActivity() {
 
@@ -29,6 +32,7 @@ class SelectTruckActivity : AppCompatActivity() {
     private lateinit var truckAdapter: TruckAdapter
     private lateinit var truckRepository: TruckRepository
 
+    private var motoristaId: Int = 0
     private var truckSelecionado: Truck? = null
 
     private lateinit var etBuscar: EditText
@@ -41,11 +45,18 @@ class SelectTruckActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_select_truck)
 
+        motoristaId = intent.getIntExtra("MOTORISTA_ID", 0)
+        if (motoristaId == 0) {
+            Toast.makeText(this, "Erro: ID do motorista não recebido.", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
+
         LocationDataBus.reset()
 
         setupViews()
         setupListeners()
-        loadTrucksFromDatabase()
+        loadCompatibleTrucks()
     }
 
     private fun setupViews() {
@@ -59,43 +70,62 @@ class SelectTruckActivity : AppCompatActivity() {
         truckRepository = TruckRepository(this)
     }
 
-    private fun loadTrucksFromDatabase() {
+    private fun loadCompatibleTrucks() {
         showLoading(true)
-
         lifecycleScope.launch {
             try {
-                val trucks = withContext(Dispatchers.IO) {
-                    truckRepository.listAll()
+                // Tenta buscar online
+                val compatibleTrucks = withContext(Dispatchers.IO) {
+                    RetrovitClient.api.getCaminhoesCompativeis(motoristaId)
                 }
 
-                withContext(Dispatchers.Main) {
-                    if (trucks.isNotEmpty()) {
-                        setupRecyclerViewWithData(trucks.sortedByDescending { it.ativo })
-                        tvEmptyState.visibility = View.GONE
-                    } else {
-                        tvEmptyState.visibility = View.VISIBLE
-                    }
-                    showLoading(false)
-                }
+                // Salva no cache para uso offline
+                val truckIds = compatibleTrucks.map { it.id.toString() }.toSet()
+                val prefs = getSharedPreferences("CompatibleTrucksCache", Context.MODE_PRIVATE)
+                prefs.edit().putStringSet("driver_${motoristaId}_trucks", truckIds).apply()
+
+                displayTrucks(compatibleTrucks)
+
+            } catch (e: UnknownHostException) {
+                // Modo Offline
+                Toast.makeText(this@SelectTruckActivity, "Sem conexão. Exibindo caminhões disponíveis offline.", Toast.LENGTH_LONG).show()
+                val allLocalTrucks = withContext(Dispatchers.IO) { truckRepository.listAll() }
+
+                val prefs = getSharedPreferences("CompatibleTrucksCache", Context.MODE_PRIVATE)
+                val cachedTruckIds = prefs.getStringSet("driver_${motoristaId}_trucks", emptySet())?.map { it.toInt() }?.toSet() ?: emptySet()
+
+                val offlineTrucks = allLocalTrucks.filter { it.id in cachedTruckIds }
+                displayTrucks(offlineTrucks)
 
             } catch (e: Exception) {
+                // Outros erros
+                e.printStackTrace()
                 withContext(Dispatchers.Main) {
                     showLoading(false)
                     tvEmptyState.visibility = View.VISIBLE
                     Toast.makeText(this@SelectTruckActivity, "Erro ao carregar caminhões.", Toast.LENGTH_SHORT).show()
                 }
-                e.printStackTrace()
             }
+        }
+    }
+
+    private suspend fun displayTrucks(trucks: List<Truck>) {
+        withContext(Dispatchers.Main) {
+            if (trucks.isNotEmpty()) {
+                setupRecyclerViewWithData(trucks.sortedByDescending { it.ativo })
+                tvEmptyState.visibility = View.GONE
+            } else {
+                tvEmptyState.visibility = View.VISIBLE
+            }
+            showLoading(false)
         }
     }
 
     private fun setupRecyclerViewWithData(trucks: List<Truck>) {
         listaTrucks = trucks
-
         truckAdapter = TruckAdapter(listaTrucks) { selecionado ->
             truckSelecionado = selecionado
         }
-
         recyclerView.adapter = truckAdapter
     }
 
@@ -159,9 +189,5 @@ class SelectTruckActivity : AppCompatActivity() {
         } ?: run {
             Toast.makeText(this, "Por favor, selecione um caminhão!", Toast.LENGTH_SHORT).show()
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
     }
 }
