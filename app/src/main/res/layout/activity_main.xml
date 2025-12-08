@@ -47,11 +47,13 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_bias="0.4">
 
-        <ImageView
-            android:id="@+id/imageView5"
-            android:layout_width="312dp"
-            android:layout_height="261dp"
-            app:srcCompat="@drawable/login_image" />
+        <pl.droidsonroids.gif.GifImageView
+            android:id="@+id/mapImageView"
+            android:layout_width="235dp"
+            android:layout_height="206dp"
+            android:contentDescription="@string/map_placeholder"
+            android:scaleType="centerCrop"
+            android:src="@drawable/logo" />
 
         <TextView
             android:layout_width="wrap_content"
