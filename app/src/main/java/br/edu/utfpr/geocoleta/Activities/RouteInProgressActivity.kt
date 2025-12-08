@@ -35,6 +35,10 @@ class RouteInProgressActivity : AppCompatActivity() {
     private var firstUpdateReceived: Boolean = false
     private var timerJob: Job? = null
 
+    // Última posição conhecida (para incidente)
+    private var lat: Double = 0.0
+    private var lng: Double = 0.0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityRouteInProgressBinding.inflate(layoutInflater)
@@ -50,12 +54,16 @@ class RouteInProgressActivity : AppCompatActivity() {
         }
         trajeto = Gson().fromJson(trajetoJson, Trajeto::class.java)
 
+        // Botão de registrar incidente (usa lat/lng atuais)
         binding.registerIncidentButton.setOnClickListener {
             val intent = Intent(this, RegisterIncidentActivity::class.java)
             intent.putExtra("TRAJETO_ID", trajeto.id)
+            intent.putExtra("LAT_ATUAL", lat)
+            intent.putExtra("LNG_ATUAL", lng)
             startActivity(intent)
         }
 
+        // Botão de finalizar rota -> abre diálogo de confirmação
         binding.finishRouteButton.setOnClickListener {
             showConfirmationDialog()
         }
@@ -69,6 +77,8 @@ class RouteInProgressActivity : AppCompatActivity() {
             LocationDataBus.locationFlow.collect { update ->
                 totalDistanceMeters = update.totalDistanceMeters
                 val elapsedSeconds = update.elapsedSeconds
+                lat = update.lat
+                lng = update.lng
 
                 if (!firstUpdateReceived) {
                     firstUpdateReceived = true
@@ -111,10 +121,13 @@ class RouteInProgressActivity : AppCompatActivity() {
             .create()
 
         btnPositive.setOnClickListener {
-            timerJob?.cancel() // Para o timer imediatamente
+            // Para o timer imediatamente
+            timerJob?.cancel()
+
             dialog.dismiss()
             binding.loadingLayout.visibility = View.VISIBLE
             binding.loadingTextView.text = "Finalizando rota..."
+
             lifecycleScope.launch {
                 finalizarTrajeto()
             }
@@ -195,5 +208,10 @@ class RouteInProgressActivity : AppCompatActivity() {
         }
 
         dialog.show()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        timerJob?.cancel()
     }
 }

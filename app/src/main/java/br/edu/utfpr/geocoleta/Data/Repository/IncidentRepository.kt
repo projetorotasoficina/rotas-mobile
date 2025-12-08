@@ -15,10 +15,8 @@ class IncidentRepository(context: Context) {
             put(DatabaseContract.Incidente.COLUMN_TRAJETO_ID, incident.trajetoId)
             put(DatabaseContract.Incidente.COLUMN_NOME, incident.nome)
             put(DatabaseContract.Incidente.COLUMN_OBSERVACOES, incident.observacoes)
-            put(DatabaseContract.Incidente.COLUMN_TS, incident.ts)
-            put(DatabaseContract.Incidente.COLUMN_LONGITUDE, incident.longitude)
-            put(DatabaseContract.Incidente.COLUMN_LATITUDE, incident.latitude)
-            put(DatabaseContract.Incidente.COLUMN_FOTO_URL, incident.fotoUrl)
+            put(DatabaseContract.Incidente.COLUMN_LONGITUDE, incident.lng)
+            put(DatabaseContract.Incidente.COLUMN_LATITUDE, incident.lat)
         }
         val id = db.insert(DatabaseContract.Incidente.TABLE_NAME, null, values)
         db.close()
@@ -31,10 +29,8 @@ class IncidentRepository(context: Context) {
             put(DatabaseContract.Incidente.COLUMN_TRAJETO_ID, incident.trajetoId)
             put(DatabaseContract.Incidente.COLUMN_NOME, incident.nome)
             put(DatabaseContract.Incidente.COLUMN_OBSERVACOES, incident.observacoes)
-            put(DatabaseContract.Incidente.COLUMN_TS, incident.ts)
-            put(DatabaseContract.Incidente.COLUMN_LONGITUDE, incident.longitude)
-            put(DatabaseContract.Incidente.COLUMN_LATITUDE, incident.latitude)
-            put(DatabaseContract.Incidente.COLUMN_FOTO_URL, incident.fotoUrl)
+            put(DatabaseContract.Incidente.COLUMN_LONGITUDE, incident.lng)
+            put(DatabaseContract.Incidente.COLUMN_LATITUDE, incident.lat)
         }
         val rows = db.update(
             DatabaseContract.Incidente.TABLE_NAME,
@@ -82,10 +78,8 @@ class IncidentRepository(context: Context) {
                         trajetoId = trajetoId,
                         nome = nome,
                         observacoes = observacoes,
-                        ts = ts,
-                        longitude = longitude,
-                        latitude = latitude,
-                        fotoUrl = fotoUrl
+                        lng = longitude,
+                        lat = latitude
                     )
                 )
             }
