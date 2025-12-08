@@ -26,6 +26,7 @@ class RouteInProgressActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityRouteInProgressBinding
     private lateinit var trajeto: Trajeto
+    private var motoristaId: Int = 0
 
     private var totalDistanceMeters: Float = 0f
 
@@ -47,12 +48,17 @@ class RouteInProgressActivity : AppCompatActivity() {
         binding.loadingLayout.visibility = View.VISIBLE
 
         val trajetoJson = intent.getStringExtra("TRAJETO_JSON")
-        if (trajetoJson == null) {
-            Toast.makeText(this, "Erro: Dados do trajeto não recebidos.", Toast.LENGTH_LONG).show()
+        motoristaId = intent.getIntExtra("MOTORISTA_ID", 0)
+
+        if (trajetoJson == null || motoristaId == 0) {
+            Toast.makeText(this, "Erro: Dados da rota ou motorista não recebidos.", Toast.LENGTH_LONG).show()
             finish()
             return
         }
         trajeto = Gson().fromJson(trajetoJson, Trajeto::class.java)
+
+        val rotaNome = intent.getStringExtra("ROTA_NOME")
+        binding.routeNameTextView.text = rotaNome ?: "Rota Desconhecida"
 
         // Botão de registrar incidente (usa lat/lng atuais)
         binding.registerIncidentButton.setOnClickListener {
@@ -192,8 +198,10 @@ class RouteInProgressActivity : AppCompatActivity() {
             .create()
 
         btnIniciarNovaRota.setOnClickListener {
-            val intent = Intent(this, SelectTruckActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+            val intent = Intent(this, SelectTruckActivity::class.java).apply {
+                putExtra("MOTORISTA_ID", motoristaId)
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+            }
             startActivity(intent)
             dialog.dismiss()
             finish()
