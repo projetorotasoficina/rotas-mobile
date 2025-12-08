@@ -34,6 +34,9 @@ interface ApiService {
     @GET("motoristas/{id}/caminhoes-compativeis")
     suspend fun getCaminhoesCompativeis(@Path("id") id: Int): List<Truck>
 
+    @GET("caminhoes/{id}/rotas-compativeis")
+    suspend fun getRotasCompativeis(@Path("id") id: Int): List<Route>
+
     @POST("app/activate")
     suspend fun activate(@Body request: ActivationRequest): ActivationResponse
 

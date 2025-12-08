@@ -30,6 +30,7 @@ class ConfirmSelectionActivity : AppCompatActivity() {
     private var rotaId: Int = 0
     private var caminhaoId: Int = 0
     private lateinit var motorista: Trucker
+    private var rotaNome: String? = null
 
     private val locationPermissions = arrayOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -71,7 +72,7 @@ class ConfirmSelectionActivity : AppCompatActivity() {
         caminhaoId = intent.getIntExtra("CAMINHAO_ID", 0)
         motorista = motoristaEncontrado
 
-        val rotaNome = intent.getStringExtra("ROTA_NOME")
+        rotaNome = intent.getStringExtra("ROTA_NOME")
         val rotaObservacoes = intent.getStringExtra("ROTA_OBSERVACOES")
         val caminhaoPlaca = intent.getStringExtra("CAMINHAO_PLACA")
         val caminhaoModelo = intent.getStringExtra("CAMINHAO_MODELO")
@@ -137,6 +138,8 @@ class ConfirmSelectionActivity : AppCompatActivity() {
 
                         val intent = Intent(this@ConfirmSelectionActivity, RouteInProgressActivity::class.java).apply {
                             putExtra("TRAJETO_JSON", Gson().toJson(trajetoCriado))
+                            putExtra("ROTA_NOME", rotaNome)
+                            putExtra("MOTORISTA_ID", motorista.id)
                         }
                         startLocationService(trajetoCriado.id!!)
                         startActivity(intent)

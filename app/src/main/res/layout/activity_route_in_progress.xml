@@ -37,6 +37,20 @@
                 android:textColor="@color/background_gradient_start" />
         </RelativeLayout>
 
+        <TextView
+            android:id="@+id/routeNameTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_md"
+            android:layout_marginEnd="@dimen/spacing_md"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            tools:text="Nome da Rota de Exemplo"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            app:layout_constraintTop_toBottomOf="@id/headerLayout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
         <LinearLayout
             android:id="@+id/statsLayout"
             android:layout_width="0dp"
@@ -45,7 +59,7 @@
             android:layout_marginTop="@dimen/spacing_md"
             android:layout_marginStart="@dimen/spacing_md"
             android:layout_marginEnd="@dimen/spacing_md"
-            app:layout_constraintTop_toBottomOf="@id/headerLayout"
+            app:layout_constraintTop_toBottomOf="@id/routeNameTextView"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
