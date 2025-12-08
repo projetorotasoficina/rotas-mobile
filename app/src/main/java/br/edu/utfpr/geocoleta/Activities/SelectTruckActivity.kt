@@ -17,6 +17,7 @@ import br.edu.utfpr.geocoleta.Adapters.TruckAdapter
 import br.edu.utfpr.geocoleta.Data.Models.Truck
 import br.edu.utfpr.geocoleta.Data.Repository.TruckRepository
 import br.edu.utfpr.geocoleta.R
+import br.edu.utfpr.geocoleta.Service.LocationDataBus
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -39,6 +40,8 @@ class SelectTruckActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_select_truck)
+
+        LocationDataBus.reset()
 
         setupViews()
         setupListeners()
