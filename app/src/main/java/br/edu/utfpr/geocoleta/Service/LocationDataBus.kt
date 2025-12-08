@@ -11,4 +11,9 @@ object LocationDataBus {
     suspend fun send(data: TimeDistance) {
         _locationFlow.emit(data)
     }
+
+    fun reset() {
+        // Limpa o último valor emitido (replay cache)
+        _locationFlow.resetReplayCache()
+    }
 }

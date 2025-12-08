@@ -6,9 +6,10 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -17,6 +18,8 @@ import br.edu.utfpr.geocoleta.Data.Repository.TruckRepository
 import br.edu.utfpr.geocoleta.Data.Repository.TruckerRepository
 import br.edu.utfpr.geocoleta.R
 import br.edu.utfpr.geocoleta.databinding.ActivityMainBinding
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import java.net.UnknownHostException
 
@@ -118,17 +121,32 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showConfirmationDialog(nomeMotorista: String, cpf: String) {
-        AlertDialog.Builder(this)
-            .setTitle("Confirmar Identidade")
-            .setMessage("Você é $nomeMotorista?")
-            .setPositiveButton("Sim, sou eu") { _, _ ->
-                saveCpfPreference(cpf)
-                val intent = Intent(this, SelectTruckActivity::class.java)
-                intent.putExtra("cpf", cpf)
-                startActivity(intent)
-            }
-            .setNegativeButton("Não sou eu", null)
-            .show()
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_confirm_identity, null)
+
+        val dialogMessage = dialogView.findViewById<TextView>(R.id.dialog_message)
+        val btnPositive = dialogView.findViewById<MaterialButton>(R.id.btn_positive)
+        val btnNegative = dialogView.findViewById<MaterialButton>(R.id.btn_negative)
+
+        dialogMessage.text = "Você é $nomeMotorista?"
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        btnPositive.setOnClickListener {
+            saveCpfPreference(cpf)
+            val intent = Intent(this, SelectTruckActivity::class.java)
+            intent.putExtra("cpf", cpf)
+            startActivity(intent)
+            dialog.dismiss()
+        }
+
+        btnNegative.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun showCpfError(message: String) {
